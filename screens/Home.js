@@ -123,7 +123,7 @@ const Home = () => {
         <View style={styles.productDetails}>
           <View style={styles.priceStockContainer}>
             <Text style={[styles.productPrice, isDark && { color: '#fff' }]}>
-              ${product.price}
+              Bs{product.price}
             </Text>
             <Text style={[styles.productStock, isDark && { color: '#bbb' }]}>
               Stock: {product.stock}
