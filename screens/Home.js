@@ -373,25 +373,33 @@ const Home = () => {
           <View style={styles.socialGrid}>
             <TouchableOpacity 
               style={[styles.socialCard, { backgroundColor: '#E4405F' }]}
-              onPress={() => openSocialLink('https://instagram.com/ecostylo')}
+              onPress={() => openSocialLink('https://www.instagram.com/GelNatAloeVera123')}
             >
-              <Ionicons name="logo-instagram" size={32} color="#fff" />
+              <Ionicons name="logo-instagram" size={22} color="#fff" />
               <Text style={styles.socialText}>Instagram</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={[styles.socialCard, { backgroundColor: '#1877F2' }]}
-              onPress={() => openSocialLink('https://facebook.com/ecostylo')}
+              style={[styles.socialCard, { backgroundColor: '#010101' }]}
+              onPress={() => openSocialLink('https://www.tiktok.com/@grupoaloevera7')}
             >
-              <Ionicons name="logo-facebook" size={32} color="#fff" />
+              <Ionicons name="logo-tiktok" size={22} color="#fff" />
+              <Text style={styles.socialText}>TikTok</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.socialCard, { backgroundColor: '#1877F2' }]}
+              onPress={() => openSocialLink('https://www.facebook.com/share/1CXBfmbzVZ/?mibextid=wwXIfr')}
+            >
+              <Ionicons name="logo-facebook" size={22} color="#fff" />
               <Text style={styles.socialText}>Facebook</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
               style={[styles.socialCard, { backgroundColor: '#00C851' }]}
-              onPress={() => openSocialLink('https://linktr.ee/ecostylo')}
+              onPress={() => openSocialLink('https://linktr.ee/TESLAQUINCE')}
             >
-              <Ionicons name="link" size={32} color="#fff" />
+              <Ionicons name="link" size={22} color="#fff" />
               <Text style={styles.socialText}>Linktree</Text>
             </TouchableOpacity>
           </View>
@@ -752,14 +760,15 @@ const styles = StyleSheet.create({
   },
   socialGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-around',
-    gap: 15,
+    gap: 8,
   },
   socialCard: {
-    width: '30%', // Adjust as needed for grid layout
+    width: 70,
     alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 5,
     borderRadius: 15,
     backgroundColor: '#f5f5f5',
     shadowColor: '#000',
@@ -767,15 +776,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    marginBottom: 8,
   },
   socialCardDark: {
     backgroundColor: '#222',
   },
   socialText: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: 'bold',
-    color: '#333',
-    marginTop: 10,
+    color: '#fff',
+    marginTop: 4,
+    textAlign: 'center',
   },
 });
 
