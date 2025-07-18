@@ -1,0 +1,19 @@
+# Ignora node_modules y archivos de build para EAS
+node_modules
+android/build
+android/app/build
+*.log
+.expo
+.expo-shared
+.idea
+.vscode
+.DS_Store
+*.iml
+*.keystore
+*.jks
+coverage
+web-build
+npm-debug.log
+yarn-error.log
+
+# Puedes agregar más carpetas o archivos grandes que no sean necesarios para el build
