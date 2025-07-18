@@ -1,19 +1,47 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useColorScheme, ScrollView, Linking, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useColorScheme, ScrollView, Linking, Image, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
 import { useAuth } from '../core/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { API_BASE_URL, apiFetch } from '../core/api';
 
-const TITLE_COLOR = '#4CAF50';
-const BROWN_COLOR = '#A0522D';
+const { width, height } = Dimensions.get('window');
+
+// Colores optimizados para gel capilar
+const COLORS = {
+  primary: '#2E7D32',      // Verde aloe vera
+  secondary: '#FF6B35',    // Naranja para CTAs
+  accent: '#4CAF50',       // Verde claro
+  success: '#66BB6A',
+  warning: '#FF9800',
+  error: '#F44336',
+  light: {
+    background: '#FAFAFA',
+    surface: '#FFFFFF',
+    card: '#FFFFFF',
+    text: '#212121',
+    textSecondary: '#757575',
+    border: '#E0E0E0',
+    shadow: '#000000',
+  },
+  dark: {
+    background: '#0A0A0A',
+    surface: '#1A1A1A',
+    card: '#2A2A2A',
+    text: '#FFFFFF',
+    textSecondary: '#B0B0B0',
+    border: '#404040',
+    shadow: '#000000',
+  }
+};
 
 const Home = () => {
   const { accessToken } = useAuth();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const theme = COLORS[isDark ? 'dark' : 'light'];
+
   const [cartCount, setCartCount] = useState(0);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,17 +86,14 @@ const Home = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await fetch(`${API_BASE_URL}/store/products`);
-      console.log('Respuesta del servidor:', response.status);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      console.log('Productos obtenidos:', data);
-      
       setProducts(data);
     } catch (err) {
       console.error('Error al obtener productos:', err);
@@ -89,366 +114,367 @@ const Home = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ product_id: productId, quantity: 1 }),
       });
-      fetchCartCount(); // Actualiza el contador después de agregar
+      fetchCartCount();
     } catch (err) {
-      // Puedes manejar errores aquí si lo deseas
+      console.error('Error al agregar al carrito:', err);
     }
   };
 
-  const renderProduct = (product) => (
-    <View key={product.id} style={[styles.productCard, isDark && styles.productCardDark]}>
-      <View style={styles.productImageContainer}>
-        {product.image_url ? (
-          <Image 
-            source={{ uri: product.image_url }} 
-            style={styles.productImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={[styles.productImagePlaceholder, { backgroundColor: isDark ? '#333' : '#f5f5f5' }]}>
-            <Ionicons name="flask" size={60} color={TITLE_COLOR} />
-          </View>
+  const renderProduct = (product, index) => (
+      <View key={product.id} style={[
+        styles.productCard,
+        {
+          backgroundColor: theme.card,
+          shadowColor: theme.shadow,
+          borderColor: theme.border,
+          borderWidth: isDark ? 1 : 0,
+        }
+      ]}>
+        {/* Badge de stock bajo */}
+        {product.stock <= 5 && product.stock > 0 && (
+            <View style={styles.stockBadge}>
+              <Text style={styles.stockBadgeText}>¡Solo quedan {product.stock}!</Text>
+            </View>
         )}
-      </View>
-      
-      <View style={styles.productInfo}>
-        <Text style={[styles.productTitle, isDark && { color: '#fff' }]}>
-          {product.title}
-        </Text>
-        
-        <Text style={[styles.productDescription, isDark && { color: '#bbb' }]} numberOfLines={3}>
-          {product.description}
-        </Text>
-        
-        <View style={styles.productDetails}>
-          <View style={styles.priceStockContainer}>
-            <Text style={[styles.productPrice, isDark && { color: '#fff' }]}>
-              Bs{product.price}
-            </Text>
-            <Text style={[styles.productStock, isDark && { color: '#bbb' }]}>
-              Stock: {product.stock}
-            </Text>
-          </View>
-          
-          <TouchableOpacity 
-            style={[styles.addToCartButton, { opacity: product.stock > 0 ? 1 : 0.5 }]}
-            onPress={() => addToCart(product.id)}
-            disabled={product.stock <= 0}
-          >
-            <Ionicons name="cart" size={16} color="#fff" />
-            <Text style={styles.addToCartText}>
-              {product.stock > 0 ? 'Agregar' : 'Sin Stock'}
-            </Text>
+
+        {/* Imagen del producto */}
+        <View style={styles.productImageContainer}>
+          {product.image_url ? (
+              <Image
+                  source={{ uri: product.image_url }}
+                  style={styles.productImage}
+                  resizeMode="cover"
+              />
+          ) : (
+              <View style={[styles.productImagePlaceholder, { backgroundColor: theme.background }]}>
+                <Ionicons name="water" size={60} color={COLORS.primary} />
+              </View>
+          )}
+
+          {/* Botón de favorito */}
+          <TouchableOpacity style={styles.favoriteBtn} activeOpacity={0.7}>
+            <Ionicons name="heart-outline" size={24} color={theme.text} />
           </TouchableOpacity>
         </View>
+
+        {/* Información del producto */}
+        <View style={styles.productContent}>
+          <Text style={[styles.productTitle, { color: theme.text }]} numberOfLines={2}>
+            {product.title}
+          </Text>
+
+          {/* Rating */}
+          <View style={styles.ratingRow}>
+            <View style={styles.stars}>
+              {[1,2,3,4,5].map((star) => (
+                  <Ionicons key={star} name="star" size={16} color={COLORS.accent} />
+              ))}
+            </View>
+            <Text style={[styles.ratingText, { color: theme.textSecondary }]}>(4.8)</Text>
+          </View>
+
+          <Text style={[styles.productDescription, { color: theme.textSecondary }]} numberOfLines={3}>
+            {product.description}
+          </Text>
+
+          {/* Precio y stock */}
+          <View style={styles.priceRow}>
+            <View style={styles.priceContainer}>
+              <Text style={[styles.price, { color: theme.text }]}>
+                Bs{product.price}
+              </Text>
+              <Text style={[styles.stockText, {
+                color: product.stock > 10 ? COLORS.success :
+                    product.stock > 0 ? COLORS.warning : COLORS.error
+              }]}>
+                {product.stock > 10 ? 'Disponible' :
+                    product.stock > 0 ? `Solo ${product.stock}` : 'Agotado'}
+              </Text>
+            </View>
+
+            {/* Botón de agregar al carrito */}
+            <TouchableOpacity
+                style={[
+                  styles.addButton,
+                  {
+                    backgroundColor: product.stock > 0 ? COLORS.secondary : theme.border,
+                    opacity: product.stock > 0 ? 1 : 0.5
+                  }
+                ]}
+                onPress={() => addToCart(product.id)}
+                disabled={product.stock <= 0}
+                activeOpacity={0.8}
+            >
+              <Ionicons
+                  name={product.stock > 0 ? "add" : "close"}
+                  size={24}
+                  color="#FFF"
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
-    </View>
   );
 
   return (
-    <View style={{ flex: 1 }}>
-      <ScrollView style={[styles.container, isDark && { backgroundColor: '#111' }]}>
-        <View style={[styles.content, { paddingHorizontal: 24 }, { paddingTop: 20 }]}>
-          
-          {/* Header con Logo */}
-          <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <Ionicons name="leaf" size={40} color={TITLE_COLOR} />
-              <Text style={[styles.logoText, isDark && { color: '#fff' }]}>EcoStylo</Text>
+      <View style={{ flex: 1 }}>
+        <ScrollView
+            style={[styles.container, { backgroundColor: theme.background }]}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+        >
+          {/* Header simplificado */}
+          <View style={[styles.header, { backgroundColor: theme.surface }]}>
+            <View style={styles.logoSection}>
+              <View style={[styles.logoIcon, { backgroundColor: COLORS.primary }]}>
+                <Ionicons name="leaf" size={28} color="#FFF" />
+              </View>
+              <View>
+                <Text style={[styles.logoText, { color: theme.text }]}>EcoStylo</Text>
+                <Text style={[styles.logoSubtext, { color: theme.textSecondary }]}>Gel Capilar Natural</Text>
+              </View>
             </View>
-            {/* Elimina el carrito del header */}
           </View>
 
-          {/* Sección Hero */}
+          {/* Hero específico para gel capilar */}
           <View style={styles.heroSection}>
-            <View style={styles.heroGradient}>
-              <View style={styles.heroIconContainer}>
-                <Ionicons name="leaf" size={50} color="#fff" />
-              </View>
-              <Text style={styles.heroTitle}>
-                EcoStylo
-              </Text>
-              <Text style={styles.heroSubtitle}>
-                Belleza Natural • Artesanal • Sostenible
-              </Text>
-              <View style={styles.heroBadge}>
-                <Ionicons name="star" size={16} color="#FFD700" />
-                <Text style={styles.heroBadgeText}>100% Natural</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Beneficios Principales */}
-          <View style={styles.benefitsSection}>
-            <Text style={[styles.sectionTitle, isDark && { color: '#fff' }]}>
-              ¿Por qué elegir EcoStylo?
-            </Text>
-            
-            <View style={styles.benefitsGrid}>
-              <View style={[
-                styles.benefitCard, 
-                styles.benefitCard1,
-                isDark && {
-                  backgroundColor: 'rgba(76, 175, 80, 0.3)',
-                  borderColor: '#4CAF50',
-                  borderWidth: 1,
-                }
-              ]}>
-                <View style={[
-                  styles.benefitIconContainer,
-                  isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
-                ]}>
-                  <Ionicons name="shield-checkmark" size={28} color="#fff" />
-                </View>
-                <Text style={[
-                  styles.benefitTitle,
-                  isDark && { color: '#fff' }
-                ]}>100% Natural</Text>
-                <Text style={[
-                  styles.benefitDescription,
-                  isDark && { color: '#ccc' }
-                ]}>Sin químicos agresivos</Text>
-              </View>
-              
-              <View style={[
-                styles.benefitCard, 
-                styles.benefitCard2,
-                isDark && {
-                  backgroundColor: 'rgba(160, 82, 45, 0.3)',
-                  borderColor: '#A0522D',
-                  borderWidth: 1,
-                }
-              ]}>
-                <View style={[
-                  styles.benefitIconContainer,
-                  isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
-                ]}>
-                  <Ionicons name="heart" size={28} color="#fff" />
-                </View>
-                <Text style={[
-                  styles.benefitTitle,
-                  isDark && { color: '#fff' }
-                ]}>Seguro</Text>
-                <Text style={[
-                  styles.benefitDescription,
-                  isDark && { color: '#ccc' }
-                ]}>Para toda la familia</Text>
-              </View>
-              
-              <View style={[
-                styles.benefitCard, 
-                styles.benefitCard3,
-                isDark && {
-                  backgroundColor: 'rgba(160, 82, 45, 0.3)',
-                  borderColor: '#A0522D',
-                  borderWidth: 1,
-                }
-              ]}>
-                <View style={[
-                  styles.benefitIconContainer,
-                  isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
-                ]}>
-                  <Ionicons name="diamond" size={28} color="#fff" />
-                </View>
-                <Text style={[
-                  styles.benefitTitle,
-                  isDark && { color: '#fff' }
-                ]}>Eco-Lujo</Text>
-                <Text style={[
-                  styles.benefitDescription,
-                  isDark && { color: '#ccc' }
-                ]}>Belleza sostenible</Text>
-              </View>
-              
-              <View style={[
-                styles.benefitCard, 
-                styles.benefitCard4,
-                isDark && {
-                  backgroundColor: 'rgba(76, 175, 80, 0.3)',
-                  borderColor: '#4CAF50',
-                  borderWidth: 1,
-                }
-              ]}>
-                <View style={[
-                  styles.benefitIconContainer,
-                  isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
-                ]}>
-                  <Ionicons name="hand-left" size={28} color="#fff" />
-                </View>
-                <Text style={[
-                  styles.benefitTitle,
-                  isDark && { color: '#fff' }
-                ]}>Artesanal</Text>
-                <Text style={[
-                  styles.benefitDescription,
-                  isDark && { color: '#ccc' }
-                ]}>Hecho con amor</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Lista de Productos */}
-          <View style={styles.productsSection}>
-            {loading ? (
-              <View style={styles.loadingContainer}>
-                <View style={styles.loadingSpinner}>
-                  <Ionicons name="refresh" size={30} color={TITLE_COLOR} />
-                </View>
-                <Text style={[styles.loadingText, isDark && { color: '#fff' }]}>
-                  Cargando productos...
-                </Text>
-              </View>
-            ) : error ? (
-              <View style={styles.errorContainer}>
-                <View style={styles.errorIcon}>
-                  <Ionicons name="alert-circle" size={40} color="#E53935" />
-                </View>
-                <Text style={[styles.errorText, isDark && { color: '#fff' }]}>
-                  Error al cargar productos
-                </Text>
-              </View>
-            ) : products && products.length > 0 ? (
-              <>
-                <View style={styles.sectionHeader}>
-                  <View style={styles.sectionIcon}>
-                    <Ionicons name="bag" size={24} color="#fff" />
-                  </View>
-                  <Text style={[styles.sectionTitle, isDark && { color: '#fff' }]}>
-                    Nuestros Productos
+            <View style={[styles.heroCard, { backgroundColor: COLORS.primary }]}>
+              <View style={styles.heroContent}>
+                <Text style={styles.heroTitle}>
+                  Cabello{'\n'}
+                  <Text style={{
+                    color: COLORS.accent,
+                    textShadowColor: '#FFFFFF',
+                    textShadowOffset: { width: 1, height: 1 },
+                    textShadowRadius: 0,
+                  }}>
+                    Saludable y Natural
                   </Text>
-                  <View style={styles.productCount}>
-                    <Text style={styles.productCountText}>{products.length}</Text>
-                  </View>
-                </View>
-                {products.map(renderProduct)}
-              </>
-            ) : (
-              <View style={styles.emptyContainer}>
-                <View style={styles.emptyIcon}>
-                  <Ionicons name="bag" size={40} color={TITLE_COLOR} />
-                </View>
-                <Text style={[styles.emptyText, isDark && { color: '#fff' }]}>
-                  Próximamente más productos
                 </Text>
+                <Text style={styles.heroSubtitle}>
+                  Gel capilar con aloe vera 100% natural{'\n'}
+                  para un cabello fuerte y brillante
+                </Text>
+
+                <TouchableOpacity
+                    style={[styles.heroButton, { backgroundColor: COLORS.secondary }]}
+                    activeOpacity={0.8}
+                >
+                  <Text style={styles.heroButtonText}>VER PRODUCTOS</Text>
+                  <Ionicons name="arrow-down" size={20} color="#FFF" />
+                </TouchableOpacity>
               </View>
+
+              {/* Stats específicos */}
+              <View style={styles.heroStats}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>500+</Text>
+                  <Text style={styles.statLabel}>Clientes</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>4.9★</Text>
+                  <Text style={styles.statLabel}>Rating</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>100%</Text>
+                  <Text style={styles.statLabel}>Aloe Vera</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Beneficios específicos para gel capilar */}
+          <View style={styles.benefitsSection}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Beneficios del Aloe Vera
+            </Text>
+
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.benefitsScroll}
+            >
+              {[
+                { icon: 'water', title: 'Hidratación', desc: 'Cabello suave y sedoso', color: COLORS.primary },
+                { icon: 'shield-checkmark', title: 'Protección', desc: 'Contra daño ambiental', color: COLORS.success },
+                { icon: 'flash', title: 'Fortalece', desc: 'Desde la raíz', color: COLORS.secondary },
+                { icon: 'sparkles', title: 'Brillo Natural', desc: 'Sin químicos agresivos', color: COLORS.accent },
+              ].map((benefit, index) => (
+                  <View key={index} style={[
+                    styles.benefitCard,
+                    {
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                      borderColor: benefit.color,
+                      borderWidth: 2,
+                    }
+                  ]}>
+                    <View style={[styles.benefitIcon, { backgroundColor: benefit.color }]}>
+                      <Ionicons name={benefit.icon} size={28} color="#FFF" />
+                    </View>
+                    <Text style={[styles.benefitTitle, { color: theme.text }]}>
+                      {benefit.title}
+                    </Text>
+                    <Text style={[styles.benefitDesc, { color: theme.textSecondary }]}>
+                      {benefit.desc}
+                    </Text>
+                  </View>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Productos */}
+          <View style={styles.productsSection}>
+            <View style={styles.productsHeader}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>
+                Nuestros Geles Capilares
+              </Text>
+              <View style={[styles.productsBadge, { backgroundColor: COLORS.primary }]}>
+                <Text style={styles.productsBadgeText}>{products.length}</Text>
+              </View>
+            </View>
+
+            {loading ? (
+                <View style={styles.loadingState}>
+                  <View style={[styles.loadingSpinner, { backgroundColor: COLORS.primary }]}>
+                    <Ionicons name="refresh" size={32} color="#FFF" />
+                  </View>
+                  <Text style={[styles.loadingText, { color: theme.text }]}>
+                    Cargando productos...
+                  </Text>
+                </View>
+            ) : error ? (
+                <View style={styles.errorState}>
+                  <Ionicons name="alert-circle" size={60} color={COLORS.error} />
+                  <Text style={[styles.errorText, { color: theme.text }]}>
+                    Error al cargar productos
+                  </Text>
+                  <TouchableOpacity
+                      style={[styles.retryBtn, { backgroundColor: COLORS.primary }]}
+                      onPress={fetchProducts}
+                      activeOpacity={0.8}
+                  >
+                    <Text style={styles.retryBtnText}>Reintentar</Text>
+                  </TouchableOpacity>
+                </View>
+            ) : (
+                <View style={styles.productsContainer}>
+                  {products.map(renderProduct)}
+                </View>
             )}
           </View>
 
-          {/* Proceso Visual */}
-          <View style={styles.processSection}>
-            <Text style={[styles.sectionTitle, isDark && { color: '#fff' }]}>
-              Nuestro Proceso
+          {/* Testimonios específicos */}
+          <View style={styles.testimonialsSection}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Cabello Transformado
             </Text>
-            
-            <View style={styles.processTimeline}>
-              <View style={styles.processStep}>
-                <View style={[
-                  styles.processIcon,
-                  isDark && { backgroundColor: '#4CAF50' }
-                ]}>
-                  <Ionicons name="leaf" size={24} color="#fff" />
-                </View>
-                <Text style={[
-                  styles.processLabel,
-                  isDark && { color: '#fff', fontWeight: 'bold' }
-                ]}>Natural</Text>
-              </View>
-              
-              <View style={styles.processLine}>
-                <Ionicons name="arrow-forward" size={20} color={TITLE_COLOR} />
-              </View>
-              
-              <View style={styles.processStep}>
-                <View style={[
-                  styles.processIcon,
-                  isDark && { backgroundColor: '#4CAF50' }
-                ]}>
-                  <Ionicons name="hand-left" size={24} color="#fff" />
-                </View>
-                <Text style={[
-                  styles.processLabel,
-                  isDark && { color: '#fff', fontWeight: 'bold' }
-                ]}>Artesanal</Text>
-              </View>
-              
-              <View style={styles.processLine}>
-                <Ionicons name="arrow-forward" size={20} color={TITLE_COLOR} />
-              </View>
-              
-              <View style={styles.processStep}>
-                <View style={[
-                  styles.processIcon,
-                  isDark && { backgroundColor: '#4CAF50' }
-                ]}>
-                  <Ionicons name="checkmark-circle" size={24} color="#fff" />
-                </View>
-                <Text style={[
-                  styles.processLabel,
-                  isDark && { color: '#fff', fontWeight: 'bold' }
-                ]}>Calidad</Text>
-              </View>
-            </View>
+
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.testimonialsScroll}
+            >
+              {[
+                { name: 'María G.', text: 'Mi cabello nunca se había visto tan saludable y brillante', avatar: '👩🏻' },
+                { name: 'Ana R.', text: 'El aloe vera realmente funciona, cabello súper suave', avatar: '👩🏽' },
+                { name: 'Carmen L.', text: 'Natural y efectivo, mi cabello está más fuerte', avatar: '👩🏻‍🦱' },
+              ].map((testimonial, index) => (
+                  <View key={index} style={[
+                    styles.testimonialCard,
+                    { backgroundColor: theme.surface, borderColor: theme.border }
+                  ]}>
+                    <View style={styles.testimonialHeader}>
+                      <Text style={styles.avatar}>{testimonial.avatar}</Text>
+                      <View>
+                        <Text style={[styles.testimonialName, { color: theme.text }]}>
+                          {testimonial.name}
+                        </Text>
+                        <View style={styles.testimonialStars}>
+                          {[1,2,3,4,5].map((star) => (
+                              <Ionicons key={star} name="star" size={14} color={COLORS.accent} />
+                          ))}
+                        </View>
+                      </View>
+                    </View>
+                    <Text style={[styles.testimonialText, { color: theme.textSecondary }]}>
+                      "{testimonial.text}"
+                    </Text>
+                  </View>
+              ))}
+            </ScrollView>
           </View>
 
-          {/* Redes sociales */}
+          {/* Redes sociales mejoradas */}
           <View style={styles.socialSection}>
-            <Text style={[styles.sectionTitle, isDark && { color: '#fff' }]}>
-              Síguenos
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Síguenos para tips de cuidado capilar
             </Text>
-            
-            <View style={styles.socialGrid}>
-              <TouchableOpacity 
-                style={[styles.socialCard, { backgroundColor: '#E4405F' }]}
-                onPress={() => openSocialLink('https://www.instagram.com/GelNatAloeVera123')}
+
+            <View style={styles.socialContainer}>
+              <TouchableOpacity
+                  style={[styles.socialButton, styles.instagramBtn]}
+                  onPress={() => openSocialLink('https://www.instagram.com/GelNatAloeVera123')}
+                  activeOpacity={0.8}
               >
-                <Ionicons name="logo-instagram" size={22} color="#fff" />
+                <Ionicons name="logo-instagram" size={20} color="#FFF" />
                 <Text style={styles.socialText}>Instagram</Text>
+                <Text style={styles.socialSubtext}>@GelNatAloeVera123</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.socialCard, { backgroundColor: '#010101' }]}
-                onPress={() => openSocialLink('https://www.tiktok.com/@grupoaloevera7')}
+
+              <TouchableOpacity
+                  style={[styles.socialButton, styles.tiktokBtn]}
+                  onPress={() => openSocialLink('https://www.tiktok.com/@grupoaloevera7')}
+                  activeOpacity={0.8}
               >
-                <Ionicons name="logo-tiktok" size={22} color="#fff" />
+                <Ionicons name="logo-tiktok" size={20} color="#FFF" />
                 <Text style={styles.socialText}>TikTok</Text>
+                <Text style={styles.socialSubtext}>@grupoaloevera7</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.socialCard, { backgroundColor: '#1877F2' }]}
-                onPress={() => openSocialLink('https://www.facebook.com/share/1CXBfmbzVZ/?mibextid=wwXIfr')}
+
+              <TouchableOpacity
+                  style={[styles.socialButton, styles.facebookBtn]}
+                  onPress={() => openSocialLink('https://www.facebook.com/share/1CXBfmbzVZ/?mibextid=wwXIfr')}
+                  activeOpacity={0.8}
               >
-                <Ionicons name="logo-facebook" size={22} color="#fff" />
+                <Ionicons name="logo-facebook" size={20} color="#FFF" />
                 <Text style={styles.socialText}>Facebook</Text>
+                <Text style={styles.socialSubtext}>EcoStylo Oficial</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.socialCard, { backgroundColor: '#00C851' }]}
-                onPress={() => openSocialLink('https://linktr.ee/TESLAQUINCE')}
+
+              <TouchableOpacity
+                  style={[styles.socialButton, styles.linktreeBtn]}
+                  onPress={() => openSocialLink('https://linktr.ee/TESLAQUINCE')}
+                  activeOpacity={0.8}
               >
-                <Ionicons name="link" size={22} color="#fff" />
-                <Text style={styles.socialText}>Linktree</Text>
+                <Ionicons name="link" size={20} color="#FFF" />
+                <Text style={styles.socialText}>Más Enlaces</Text>
+                <Text style={styles.socialSubtext}>Todos nuestros links</Text>
               </TouchableOpacity>
             </View>
           </View>
+        </ScrollView>
 
-        </View>
-      </ScrollView>
-      {cartCount > 0 && (
-        <TouchableOpacity
-          style={[
-            styles.fabCart,
-            isDark && { backgroundColor: '#388e3c', shadowColor: '#222' }
-          ]}
-          onPress={() => navigation.navigate('Cart')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="cart" size={28} color="#fff" />
-          <View style={styles.fabCartBadge}>
-            <Text style={styles.fabCartBadgeText}>{cartCount}</Text>
-          </View>
-        </TouchableOpacity>
-      )}
-    </View>
+        {/* FAB del carrito */}
+        {cartCount > 0 && (
+            <TouchableOpacity
+                style={[
+                  styles.cartFab,
+                  {
+                    backgroundColor: COLORS.secondary,
+                    shadowColor: COLORS.secondary,
+                  }
+                ]}
+                onPress={() => navigation.navigate('Cart')}
+                activeOpacity={0.8}
+            >
+              <Ionicons name="bag" size={28} color="#FFF" />
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{cartCount}</Text>
+              </View>
+            </TouchableOpacity>
+        )}
+      </View>
   );
 };
 
@@ -456,205 +482,197 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
+    paddingBottom: 120,
   },
+
+  // Header simplificado
   header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  logoSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  logoText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  logoSubtext: {
+    fontSize: 12,
+    marginTop: -2,
+  },
+
+  // Hero específico
+  heroSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  heroCard: {
+    borderRadius: 20,
+    padding: 24,
+    minHeight: 280,
+  },
+  heroContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  heroTitle: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginBottom: 12,
+    lineHeight: 42,
+  },
+  heroSubtitle: {
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.9)',
+    marginBottom: 24,
+    lineHeight: 24,
+  },
+  heroButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 30,
+    alignSelf: 'flex-start',
+    minWidth: 200,
+  },
+  heroButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 8,
+  },
+  heroStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 24,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.2)',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  statLabel: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 4,
+  },
+
+  // Beneficios
+  benefitsSection: {
+    paddingVertical: 20,
+  },
+  benefitsScroll: {
+    paddingHorizontal: 20,
+    paddingRight: 40,
+  },
+  benefitCard: {
+    width: 140,
+    alignItems: 'center',
+    padding: 20,
+    borderRadius: 16,
+    marginRight: 16,
+  },
+  benefitIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  benefitTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  benefitDesc: {
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+
+  // Productos
+  productsSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  productsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
-  },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logoText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: TITLE_COLOR,
-    marginLeft: 10,
-  },
-  cartButton: {
-    position: 'relative',
-    padding: 8,
-  },
-  cartBadge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: '#E53935',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cartBadgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  heroSection: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  heroGradient: {
-    width: '100%',
-    height: 250,
-    borderRadius: 20,
-    padding: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: TITLE_COLOR,
-    position: 'relative',
-  },
-  heroIconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  heroTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  heroSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.8)',
-    textAlign: 'center',
-  },
-  heroBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 20,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    marginTop: 15,
-  },
-  heroBadgeText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginLeft: 5,
-  },
-  benefitsSection: {
-    marginBottom: 30,
-  },
-  benefitsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
-    gap: 20,
-  },
-  benefitCard: {
-    width: '45%', // Adjust as needed for grid layout
-    alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 15,
-    borderRadius: 15,
-    backgroundColor: '#f5f5f5',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  benefitCardDark: {
-    backgroundColor: '#222',
-  },
-  benefitCard1: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-  },
-  benefitCard2: {
-    backgroundColor: 'rgba(160, 82, 45, 0.1)',
-  },
-  benefitCard3: {
-    backgroundColor: 'rgba(160, 82, 45, 0.1)',
-  },
-  benefitCard4: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-  },
-  benefitIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  benefitTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  benefitDescription: {
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
-  },
-  productsSection: {
-    marginBottom: 40,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 20,
   },
-  sectionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginLeft: 10,
-  },
-  productCount: {
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+  productsBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 15,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    marginLeft: 10,
   },
-  productCountText: {
+  productsBadgeText: {
+    color: '#FFF',
     fontSize: 14,
     fontWeight: 'bold',
-    color: TITLE_COLOR,
+  },
+  productsContainer: {
+    // Una sola columna
   },
   productCard: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
+    borderRadius: 16,
     marginBottom: 20,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    overflow: 'hidden',
+    position: 'relative',
   },
-  productCardDark: {
-    backgroundColor: '#222',
+  stockBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: COLORS.warning,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    zIndex: 1,
+  },
+  stockBadgeText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   productImageContainer: {
-    width: '100%',
     height: 200,
+    position: 'relative',
   },
   productImage: {
     width: '100%',
@@ -666,200 +684,222 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  productInfo: {
+  favoriteBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  productContent: {
     padding: 20,
   },
   productTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 8,
+    lineHeight: 24,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  stars: {
+    flexDirection: 'row',
+    marginRight: 8,
+  },
+  ratingText: {
+    fontSize: 14,
   },
   productDescription: {
     fontSize: 14,
-    color: '#666',
     lineHeight: 20,
-    marginBottom: 15,
+    marginBottom: 16,
   },
-  productDetails: {
+  priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  priceStockContainer: {
+  priceContainer: {
     flex: 1,
   },
-  productPrice: {
+  price: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: TITLE_COLOR,
     marginBottom: 4,
   },
-  productStock: {
+  stockText: {
     fontSize: 12,
-    color: '#666',
+    fontWeight: '600',
   },
-  addToCartButton: {
-    flexDirection: 'row',
+  addButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: TITLE_COLOR,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
+    marginLeft: 16,
   },
-  addToCartText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginLeft: 6,
-  },
-  loadingContainer: {
+
+  // Estados
+  loadingState: {
     alignItems: 'center',
-    padding: 40,
+    paddingVertical: 60,
   },
   loadingSpinner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 20,
   },
   loadingText: {
-    marginTop: 10,
     fontSize: 16,
-    color: '#666',
+    textAlign: 'center',
   },
-  errorContainer: {
+  errorState: {
     alignItems: 'center',
-    padding: 40,
-  },
-  errorIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(229, 57, 53, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
+    paddingVertical: 60,
   },
   errorText: {
-    marginTop: 10,
     fontSize: 16,
-    color: '#E53935',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  emptyText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  processSection: {
-    marginBottom: 30,
-  },
-  processTimeline: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  processStep: {
-    alignItems: 'center',
-  },
-  processIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  processLabel: {
-    fontSize: 14,
+    marginVertical: 20,
     textAlign: 'center',
-    color: '#333',
-    fontWeight: 'normal',
   },
-  processLine: {
-    marginHorizontal: 10,
+  retryBtn: {
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 25,
   },
-  socialSection: {
-    marginBottom: 30,
+  retryBtnText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
-  socialGrid: {
+
+  // Testimonios
+  testimonialsSection: {
+    paddingVertical: 20,
+  },
+  testimonialsScroll: {
+    paddingHorizontal: 20,
+    paddingRight: 40,
+  },
+  testimonialCard: {
+    width: 280,
+    padding: 20,
+    borderRadius: 16,
+    marginRight: 16,
+    borderWidth: 1,
+  },
+  testimonialHeader: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
-    gap: 8,
-  },
-  socialCard: {
-    width: 70,
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 5,
-    borderRadius: 15,
-    backgroundColor: '#f5f5f5',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 12,
+  },
+  avatar: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  testimonialName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  testimonialStars: {
+    flexDirection: 'row',
+  },
+  testimonialText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontStyle: 'italic',
+  },
+
+  // Redes sociales mejoradas
+  socialSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  socialContainer: {
+    marginTop: 16,
+    gap: 12,
+  },
+  socialButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
     marginBottom: 8,
   },
-  socialCardDark: {
-    backgroundColor: '#222',
+  instagramBtn: {
+    backgroundColor: '#E4405F',
+  },
+  tiktokBtn: {
+    backgroundColor: '#000000',
+  },
+  facebookBtn: {
+    backgroundColor: '#1877F2',
+  },
+  linktreeBtn: {
+    backgroundColor: '#00C851',
   },
   socialText: {
-    fontSize: 11,
+    color: '#FFF',
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 4,
-    textAlign: 'center',
+    marginLeft: 12,
+    flex: 1,
   },
-  fabCart: {
+  socialSubtext: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 12,
+  },
+
+  // Títulos
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    paddingHorizontal: 20,
+  },
+
+  // FAB
+  cartFab: {
     position: 'absolute',
-    right: 24,
-    bottom: 24,
-    backgroundColor: TITLE_COLOR,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    right: 20,
+    bottom: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
     zIndex: 100,
   },
-  fabCartBadge: {
+  cartBadge: {
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: '#E53935',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  fabCartBadgeText: {
-    color: '#fff',
+  cartBadgeText: {
+    color: COLORS.secondary,
     fontSize: 12,
     fontWeight: 'bold',
   },
