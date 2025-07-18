@@ -17,6 +17,7 @@ import Profile from './screens/Profile';
 import PasswordRecoveryScreen from './screens/PasswordRecoveryScreen';
 import EditProfile from './screens/EditProfile';
 import ChangePassW from './screens/ChangePassW';
+import CartScreen from './screens/CartScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -77,6 +78,7 @@ function AppContent() {
               <Stack.Screen name="Profile" component={Profile} options={{ title: 'Perfil' }} />
               <Stack.Screen name="EditProfile" component={EditProfile} options={{ title: 'Editar Perfil' }} />
               <Stack.Screen name="ChangePassW" component={ChangePassW} options={{ title: 'Cambiar contraseña' }} />
+              <Stack.Screen name="Cart" component={CartScreen} options={{ title: 'Carrito' }} />
             </>
           )}
         </Stack.Navigator>

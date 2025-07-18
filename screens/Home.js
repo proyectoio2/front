@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '../core/AuthContext';
 import { useNavigation } from '@react-navigation/native';
-import { API_BASE_URL } from '../core/api';
+import { API_BASE_URL, apiFetch } from '../core/api';
 
 const TITLE_COLOR = '#4CAF50';
 const BROWN_COLOR = '#A0522D';
@@ -28,6 +28,31 @@ const Home = () => {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  useEffect(() => {
+    if (accessToken) {
+      fetchCartCount();
+      const interval = setInterval(fetchCartCount, 15000);
+      return () => clearInterval(interval);
+    }
+  }, [accessToken]);
+
+  const fetchCartCount = async () => {
+    try {
+      const { data, ok } = await apiFetch('/store/cart', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (ok && data && data.cart_products) {
+        const total = data.cart_products.reduce((sum, item) => sum + item.quantity, 0);
+        setCartCount(total);
+      } else {
+        setCartCount(0);
+      }
+    } catch (err) {
+      setCartCount(0);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -57,10 +82,17 @@ const Home = () => {
     Linking.openURL(url).catch(err => console.error('Error al abrir enlace:', err));
   };
 
-  const addToCart = (productId) => {
-    setCartCount(prev => prev + 1);
-    // Aquí puedes agregar la lógica para agregar al carrito
-    console.log('Agregando producto al carrito:', productId);
+  const addToCart = async (productId) => {
+    try {
+      await apiFetch('/store/cart/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: productId, quantity: 1 }),
+      });
+      fetchCartCount(); // Actualiza el contador después de agregar
+    } catch (err) {
+      // Puedes manejar errores aquí si lo deseas
+    }
   };
 
   const renderProduct = (product) => (
@@ -154,15 +186,19 @@ const Home = () => {
             
             <View style={styles.benefitsGrid}>
               <View style={[
-                styles.benefitCard,
-                isDark ? { backgroundColor: '#222', borderColor: '#333', borderWidth: 1 } : { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 },
+                styles.benefitCard, 
                 styles.benefitCard1,
+                isDark && {
+                  backgroundColor: 'rgba(76, 175, 80, 0.3)',
+                  borderColor: '#4CAF50',
+                  borderWidth: 1,
+                }
               ]}>
                 <View style={[
                   styles.benefitIconContainer,
                   isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
                 ]}>
-                  <Ionicons name="shield-checkmark" size={28} color={TITLE_COLOR} />
+                  <Ionicons name="shield-checkmark" size={28} color="#fff" />
                 </View>
                 <Text style={[
                   styles.benefitTitle,
@@ -175,15 +211,19 @@ const Home = () => {
               </View>
               
               <View style={[
-                styles.benefitCard,
-                isDark ? { backgroundColor: '#222', borderColor: '#333', borderWidth: 1 } : { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 },
+                styles.benefitCard, 
                 styles.benefitCard2,
+                isDark && {
+                  backgroundColor: 'rgba(160, 82, 45, 0.3)',
+                  borderColor: '#A0522D',
+                  borderWidth: 1,
+                }
               ]}>
                 <View style={[
                   styles.benefitIconContainer,
                   isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
                 ]}>
-                  <Ionicons name="heart" size={28} color={BROWN_COLOR} />
+                  <Ionicons name="heart" size={28} color="#fff" />
                 </View>
                 <Text style={[
                   styles.benefitTitle,
@@ -196,15 +236,19 @@ const Home = () => {
               </View>
               
               <View style={[
-                styles.benefitCard,
-                isDark ? { backgroundColor: '#222', borderColor: '#333', borderWidth: 1 } : { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 },
+                styles.benefitCard, 
                 styles.benefitCard3,
+                isDark && {
+                  backgroundColor: 'rgba(160, 82, 45, 0.3)',
+                  borderColor: '#A0522D',
+                  borderWidth: 1,
+                }
               ]}>
                 <View style={[
                   styles.benefitIconContainer,
                   isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
                 ]}>
-                  <Ionicons name="diamond" size={28} color={BROWN_COLOR} />
+                  <Ionicons name="diamond" size={28} color="#fff" />
                 </View>
                 <Text style={[
                   styles.benefitTitle,
@@ -217,15 +261,19 @@ const Home = () => {
               </View>
               
               <View style={[
-                styles.benefitCard,
-                isDark ? { backgroundColor: '#222', borderColor: '#333', borderWidth: 1 } : { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 },
+                styles.benefitCard, 
                 styles.benefitCard4,
+                isDark && {
+                  backgroundColor: 'rgba(76, 175, 80, 0.3)',
+                  borderColor: '#4CAF50',
+                  borderWidth: 1,
+                }
               ]}>
                 <View style={[
                   styles.benefitIconContainer,
                   isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
                 ]}>
-                  <Ionicons name="hand-left" size={28} color={TITLE_COLOR} />
+                  <Ionicons name="hand-left" size={28} color="#fff" />
                 </View>
                 <Text style={[
                   styles.benefitTitle,
@@ -391,7 +439,7 @@ const Home = () => {
             styles.fabCart,
             isDark && { backgroundColor: '#388e3c', shadowColor: '#222' }
           ]}
-          onPress={() => {/* lógica para ir al carrito */}}
+          onPress={() => navigation.navigate('Cart')}
           activeOpacity={0.8}
         >
           <Ionicons name="cart" size={28} color="#fff" />
