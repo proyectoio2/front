@@ -4,7 +4,7 @@
 import storage from './storage';
 import { tokenEvents } from './AuthContext';
 
-export const API_BASE_URL = 'http://127.0.0.1:8000';
+export const API_BASE_URL = 'https://io2-l2tx8.ondigitalocean.app/';
 
 export const getStoredToken = async () => {
   try {
