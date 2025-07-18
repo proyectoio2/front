@@ -114,299 +114,293 @@ const Home = () => {
   );
 
   return (
-    <ScrollView style={[styles.container, isDark && { backgroundColor: '#111' }]}>
-      <View style={[styles.content, { paddingHorizontal: 24 }, { paddingTop: 20 }]}>
-        
-        {/* Header con Logo */}
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <Ionicons name="leaf" size={40} color={TITLE_COLOR} />
-            <Text style={[styles.logoText, isDark && { color: '#fff' }]}>EcoStylo</Text>
+    <View style={{ flex: 1 }}>
+      <ScrollView style={[styles.container, isDark && { backgroundColor: '#111' }]}>
+        <View style={[styles.content, { paddingHorizontal: 24 }, { paddingTop: 20 }]}>
+          
+          {/* Header con Logo */}
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <Ionicons name="leaf" size={40} color={TITLE_COLOR} />
+              <Text style={[styles.logoText, isDark && { color: '#fff' }]}>EcoStylo</Text>
+            </View>
+            {/* Elimina el carrito del header */}
           </View>
-          <TouchableOpacity style={styles.cartButton}>
-            <Ionicons name="cart" size={24} color={isDark ? '#fff' : '#333'} />
-            {cartCount > 0 && (
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>{cartCount}</Text>
+
+          {/* Sección Hero */}
+          <View style={styles.heroSection}>
+            <View style={styles.heroGradient}>
+              <View style={styles.heroIconContainer}>
+                <Ionicons name="leaf" size={50} color="#fff" />
+              </View>
+              <Text style={styles.heroTitle}>
+                EcoStylo
+              </Text>
+              <Text style={styles.heroSubtitle}>
+                Belleza Natural • Artesanal • Sostenible
+              </Text>
+              <View style={styles.heroBadge}>
+                <Ionicons name="star" size={16} color="#FFD700" />
+                <Text style={styles.heroBadgeText}>100% Natural</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Beneficios Principales */}
+          <View style={styles.benefitsSection}>
+            <Text style={[styles.sectionTitle, isDark && { color: '#fff' }]}>
+              ¿Por qué elegir EcoStylo?
+            </Text>
+            
+            <View style={styles.benefitsGrid}>
+              <View style={[
+                styles.benefitCard,
+                isDark ? { backgroundColor: '#222', borderColor: '#333', borderWidth: 1 } : { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 },
+                styles.benefitCard1,
+              ]}>
+                <View style={[
+                  styles.benefitIconContainer,
+                  isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
+                ]}>
+                  <Ionicons name="shield-checkmark" size={28} color={TITLE_COLOR} />
+                </View>
+                <Text style={[
+                  styles.benefitTitle,
+                  isDark && { color: '#fff' }
+                ]}>100% Natural</Text>
+                <Text style={[
+                  styles.benefitDescription,
+                  isDark && { color: '#ccc' }
+                ]}>Sin químicos agresivos</Text>
+              </View>
+              
+              <View style={[
+                styles.benefitCard,
+                isDark ? { backgroundColor: '#222', borderColor: '#333', borderWidth: 1 } : { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 },
+                styles.benefitCard2,
+              ]}>
+                <View style={[
+                  styles.benefitIconContainer,
+                  isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
+                ]}>
+                  <Ionicons name="heart" size={28} color={BROWN_COLOR} />
+                </View>
+                <Text style={[
+                  styles.benefitTitle,
+                  isDark && { color: '#fff' }
+                ]}>Seguro</Text>
+                <Text style={[
+                  styles.benefitDescription,
+                  isDark && { color: '#ccc' }
+                ]}>Para toda la familia</Text>
+              </View>
+              
+              <View style={[
+                styles.benefitCard,
+                isDark ? { backgroundColor: '#222', borderColor: '#333', borderWidth: 1 } : { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 },
+                styles.benefitCard3,
+              ]}>
+                <View style={[
+                  styles.benefitIconContainer,
+                  isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
+                ]}>
+                  <Ionicons name="diamond" size={28} color={BROWN_COLOR} />
+                </View>
+                <Text style={[
+                  styles.benefitTitle,
+                  isDark && { color: '#fff' }
+                ]}>Eco-Lujo</Text>
+                <Text style={[
+                  styles.benefitDescription,
+                  isDark && { color: '#ccc' }
+                ]}>Belleza sostenible</Text>
+              </View>
+              
+              <View style={[
+                styles.benefitCard,
+                isDark ? { backgroundColor: '#222', borderColor: '#333', borderWidth: 1 } : { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 },
+                styles.benefitCard4,
+              ]}>
+                <View style={[
+                  styles.benefitIconContainer,
+                  isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
+                ]}>
+                  <Ionicons name="hand-left" size={28} color={TITLE_COLOR} />
+                </View>
+                <Text style={[
+                  styles.benefitTitle,
+                  isDark && { color: '#fff' }
+                ]}>Artesanal</Text>
+                <Text style={[
+                  styles.benefitDescription,
+                  isDark && { color: '#ccc' }
+                ]}>Hecho con amor</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Lista de Productos */}
+          <View style={styles.productsSection}>
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <View style={styles.loadingSpinner}>
+                  <Ionicons name="refresh" size={30} color={TITLE_COLOR} />
+                </View>
+                <Text style={[styles.loadingText, isDark && { color: '#fff' }]}>
+                  Cargando productos...
+                </Text>
+              </View>
+            ) : error ? (
+              <View style={styles.errorContainer}>
+                <View style={styles.errorIcon}>
+                  <Ionicons name="alert-circle" size={40} color="#E53935" />
+                </View>
+                <Text style={[styles.errorText, isDark && { color: '#fff' }]}>
+                  Error al cargar productos
+                </Text>
+              </View>
+            ) : products && products.length > 0 ? (
+              <>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.sectionIcon}>
+                    <Ionicons name="bag" size={24} color="#fff" />
+                  </View>
+                  <Text style={[styles.sectionTitle, isDark && { color: '#fff' }]}>
+                    Nuestros Productos
+                  </Text>
+                  <View style={styles.productCount}>
+                    <Text style={styles.productCountText}>{products.length}</Text>
+                  </View>
+                </View>
+                {products.map(renderProduct)}
+              </>
+            ) : (
+              <View style={styles.emptyContainer}>
+                <View style={styles.emptyIcon}>
+                  <Ionicons name="bag" size={40} color={TITLE_COLOR} />
+                </View>
+                <Text style={[styles.emptyText, isDark && { color: '#fff' }]}>
+                  Próximamente más productos
+                </Text>
               </View>
             )}
-          </TouchableOpacity>
-        </View>
+          </View>
 
-        {/* Sección Hero */}
-        <View style={styles.heroSection}>
-          <View style={styles.heroGradient}>
-            <View style={styles.heroIconContainer}>
-              <Ionicons name="leaf" size={50} color="#fff" />
-            </View>
-            <Text style={styles.heroTitle}>
-              EcoStylo
+          {/* Proceso Visual */}
+          <View style={styles.processSection}>
+            <Text style={[styles.sectionTitle, isDark && { color: '#fff' }]}>
+              Nuestro Proceso
             </Text>
-            <Text style={styles.heroSubtitle}>
-              Belleza Natural • Artesanal • Sostenible
+            
+            <View style={styles.processTimeline}>
+              <View style={styles.processStep}>
+                <View style={[
+                  styles.processIcon,
+                  isDark && { backgroundColor: '#4CAF50' }
+                ]}>
+                  <Ionicons name="leaf" size={24} color="#fff" />
+                </View>
+                <Text style={[
+                  styles.processLabel,
+                  isDark && { color: '#fff', fontWeight: 'bold' }
+                ]}>Natural</Text>
+              </View>
+              
+              <View style={styles.processLine}>
+                <Ionicons name="arrow-forward" size={20} color={TITLE_COLOR} />
+              </View>
+              
+              <View style={styles.processStep}>
+                <View style={[
+                  styles.processIcon,
+                  isDark && { backgroundColor: '#4CAF50' }
+                ]}>
+                  <Ionicons name="hand-left" size={24} color="#fff" />
+                </View>
+                <Text style={[
+                  styles.processLabel,
+                  isDark && { color: '#fff', fontWeight: 'bold' }
+                ]}>Artesanal</Text>
+              </View>
+              
+              <View style={styles.processLine}>
+                <Ionicons name="arrow-forward" size={20} color={TITLE_COLOR} />
+              </View>
+              
+              <View style={styles.processStep}>
+                <View style={[
+                  styles.processIcon,
+                  isDark && { backgroundColor: '#4CAF50' }
+                ]}>
+                  <Ionicons name="checkmark-circle" size={24} color="#fff" />
+                </View>
+                <Text style={[
+                  styles.processLabel,
+                  isDark && { color: '#fff', fontWeight: 'bold' }
+                ]}>Calidad</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Redes sociales */}
+          <View style={styles.socialSection}>
+            <Text style={[styles.sectionTitle, isDark && { color: '#fff' }]}>
+              Síguenos
             </Text>
-            <View style={styles.heroBadge}>
-              <Ionicons name="star" size={16} color="#FFD700" />
-              <Text style={styles.heroBadgeText}>100% Natural</Text>
+            
+            <View style={styles.socialGrid}>
+              <TouchableOpacity 
+                style={[styles.socialCard, { backgroundColor: '#E4405F' }]}
+                onPress={() => openSocialLink('https://www.instagram.com/GelNatAloeVera123')}
+              >
+                <Ionicons name="logo-instagram" size={22} color="#fff" />
+                <Text style={styles.socialText}>Instagram</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.socialCard, { backgroundColor: '#010101' }]}
+                onPress={() => openSocialLink('https://www.tiktok.com/@grupoaloevera7')}
+              >
+                <Ionicons name="logo-tiktok" size={22} color="#fff" />
+                <Text style={styles.socialText}>TikTok</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.socialCard, { backgroundColor: '#1877F2' }]}
+                onPress={() => openSocialLink('https://www.facebook.com/share/1CXBfmbzVZ/?mibextid=wwXIfr')}
+              >
+                <Ionicons name="logo-facebook" size={22} color="#fff" />
+                <Text style={styles.socialText}>Facebook</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.socialCard, { backgroundColor: '#00C851' }]}
+                onPress={() => openSocialLink('https://linktr.ee/TESLAQUINCE')}
+              >
+                <Ionicons name="link" size={22} color="#fff" />
+                <Text style={styles.socialText}>Linktree</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </View>
 
-        {/* Beneficios Principales */}
-        <View style={styles.benefitsSection}>
-          <Text style={[styles.sectionTitle, isDark && { color: '#fff' }]}>
-            ¿Por qué elegir EcoStylo?
-          </Text>
-          
-          <View style={styles.benefitsGrid}>
-            <View style={[
-              styles.benefitCard, 
-              styles.benefitCard1,
-              isDark && {
-                backgroundColor: 'rgba(76, 175, 80, 0.3)',
-                borderColor: '#4CAF50',
-                borderWidth: 1,
-              }
-            ]}>
-              <View style={[
-                styles.benefitIconContainer,
-                isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
-              ]}>
-                <Ionicons name="shield-checkmark" size={28} color="#fff" />
-              </View>
-              <Text style={[
-                styles.benefitTitle,
-                isDark && { color: '#fff' }
-              ]}>100% Natural</Text>
-              <Text style={[
-                styles.benefitDescription,
-                isDark && { color: '#ccc' }
-              ]}>Sin químicos agresivos</Text>
-            </View>
-            
-            <View style={[
-              styles.benefitCard, 
-              styles.benefitCard2,
-              isDark && {
-                backgroundColor: 'rgba(160, 82, 45, 0.3)',
-                borderColor: '#A0522D',
-                borderWidth: 1,
-              }
-            ]}>
-              <View style={[
-                styles.benefitIconContainer,
-                isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
-              ]}>
-                <Ionicons name="heart" size={28} color="#fff" />
-              </View>
-              <Text style={[
-                styles.benefitTitle,
-                isDark && { color: '#fff' }
-              ]}>Seguro</Text>
-              <Text style={[
-                styles.benefitDescription,
-                isDark && { color: '#ccc' }
-              ]}>Para toda la familia</Text>
-            </View>
-            
-            <View style={[
-              styles.benefitCard, 
-              styles.benefitCard3,
-              isDark && {
-                backgroundColor: 'rgba(160, 82, 45, 0.3)',
-                borderColor: '#A0522D',
-                borderWidth: 1,
-              }
-            ]}>
-              <View style={[
-                styles.benefitIconContainer,
-                isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
-              ]}>
-                <Ionicons name="diamond" size={28} color="#fff" />
-              </View>
-              <Text style={[
-                styles.benefitTitle,
-                isDark && { color: '#fff' }
-              ]}>Eco-Lujo</Text>
-              <Text style={[
-                styles.benefitDescription,
-                isDark && { color: '#ccc' }
-              ]}>Belleza sostenible</Text>
-            </View>
-            
-            <View style={[
-              styles.benefitCard, 
-              styles.benefitCard4,
-              isDark && {
-                backgroundColor: 'rgba(76, 175, 80, 0.3)',
-                borderColor: '#4CAF50',
-                borderWidth: 1,
-              }
-            ]}>
-              <View style={[
-                styles.benefitIconContainer,
-                isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }
-              ]}>
-                <Ionicons name="hand-left" size={28} color="#fff" />
-              </View>
-              <Text style={[
-                styles.benefitTitle,
-                isDark && { color: '#fff' }
-              ]}>Artesanal</Text>
-              <Text style={[
-                styles.benefitDescription,
-                isDark && { color: '#ccc' }
-              ]}>Hecho con amor</Text>
-            </View>
+        </View>
+      </ScrollView>
+      {cartCount > 0 && (
+        <TouchableOpacity
+          style={[
+            styles.fabCart,
+            isDark && { backgroundColor: '#388e3c', shadowColor: '#222' }
+          ]}
+          onPress={() => {/* lógica para ir al carrito */}}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="cart" size={28} color="#fff" />
+          <View style={styles.fabCartBadge}>
+            <Text style={styles.fabCartBadgeText}>{cartCount}</Text>
           </View>
-        </View>
-
-        {/* Lista de Productos */}
-        <View style={styles.productsSection}>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <View style={styles.loadingSpinner}>
-                <Ionicons name="refresh" size={30} color={TITLE_COLOR} />
-              </View>
-              <Text style={[styles.loadingText, isDark && { color: '#fff' }]}>
-                Cargando productos...
-              </Text>
-            </View>
-          ) : error ? (
-            <View style={styles.errorContainer}>
-              <View style={styles.errorIcon}>
-                <Ionicons name="alert-circle" size={40} color="#E53935" />
-              </View>
-              <Text style={[styles.errorText, isDark && { color: '#fff' }]}>
-                Error al cargar productos
-              </Text>
-            </View>
-          ) : products && products.length > 0 ? (
-            <>
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionIcon}>
-                  <Ionicons name="bag" size={24} color="#fff" />
-                </View>
-                <Text style={[styles.sectionTitle, isDark && { color: '#fff' }]}>
-                  Nuestros Productos
-                </Text>
-                <View style={styles.productCount}>
-                  <Text style={styles.productCountText}>{products.length}</Text>
-                </View>
-              </View>
-              {products.map(renderProduct)}
-            </>
-          ) : (
-            <View style={styles.emptyContainer}>
-              <View style={styles.emptyIcon}>
-                <Ionicons name="bag" size={40} color={TITLE_COLOR} />
-              </View>
-              <Text style={[styles.emptyText, isDark && { color: '#fff' }]}>
-                Próximamente más productos
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Proceso Visual */}
-        <View style={styles.processSection}>
-          <Text style={[styles.sectionTitle, isDark && { color: '#fff' }]}>
-            Nuestro Proceso
-          </Text>
-          
-          <View style={styles.processTimeline}>
-            <View style={styles.processStep}>
-              <View style={[
-                styles.processIcon,
-                isDark && { backgroundColor: '#4CAF50' }
-              ]}>
-                <Ionicons name="leaf" size={24} color="#fff" />
-              </View>
-              <Text style={[
-                styles.processLabel,
-                isDark && { color: '#fff', fontWeight: 'bold' }
-              ]}>Natural</Text>
-            </View>
-            
-            <View style={styles.processLine}>
-              <Ionicons name="arrow-forward" size={20} color={TITLE_COLOR} />
-            </View>
-            
-            <View style={styles.processStep}>
-              <View style={[
-                styles.processIcon,
-                isDark && { backgroundColor: '#4CAF50' }
-              ]}>
-                <Ionicons name="hand-left" size={24} color="#fff" />
-              </View>
-              <Text style={[
-                styles.processLabel,
-                isDark && { color: '#fff', fontWeight: 'bold' }
-              ]}>Artesanal</Text>
-            </View>
-            
-            <View style={styles.processLine}>
-              <Ionicons name="arrow-forward" size={20} color={TITLE_COLOR} />
-            </View>
-            
-            <View style={styles.processStep}>
-              <View style={[
-                styles.processIcon,
-                isDark && { backgroundColor: '#4CAF50' }
-              ]}>
-                <Ionicons name="checkmark-circle" size={24} color="#fff" />
-              </View>
-              <Text style={[
-                styles.processLabel,
-                isDark && { color: '#fff', fontWeight: 'bold' }
-              ]}>Calidad</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Redes sociales */}
-        <View style={styles.socialSection}>
-          <Text style={[styles.sectionTitle, isDark && { color: '#fff' }]}>
-            Síguenos
-          </Text>
-          
-          <View style={styles.socialGrid}>
-            <TouchableOpacity 
-              style={[styles.socialCard, { backgroundColor: '#E4405F' }]}
-              onPress={() => openSocialLink('https://www.instagram.com/GelNatAloeVera123')}
-            >
-              <Ionicons name="logo-instagram" size={22} color="#fff" />
-              <Text style={styles.socialText}>Instagram</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.socialCard, { backgroundColor: '#010101' }]}
-              onPress={() => openSocialLink('https://www.tiktok.com/@grupoaloevera7')}
-            >
-              <Ionicons name="logo-tiktok" size={22} color="#fff" />
-              <Text style={styles.socialText}>TikTok</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.socialCard, { backgroundColor: '#1877F2' }]}
-              onPress={() => openSocialLink('https://www.facebook.com/share/1CXBfmbzVZ/?mibextid=wwXIfr')}
-            >
-              <Ionicons name="logo-facebook" size={22} color="#fff" />
-              <Text style={styles.socialText}>Facebook</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.socialCard, { backgroundColor: '#00C851' }]}
-              onPress={() => openSocialLink('https://linktr.ee/TESLAQUINCE')}
-            >
-              <Ionicons name="link" size={22} color="#fff" />
-              <Text style={styles.socialText}>Linktree</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-      </View>
-    </ScrollView>
+        </TouchableOpacity>
+      )}
+    </View>
   );
 };
 
@@ -787,6 +781,39 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginTop: 4,
     textAlign: 'center',
+  },
+  fabCart: {
+    position: 'absolute',
+    right: 24,
+    bottom: 24,
+    backgroundColor: TITLE_COLOR,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    zIndex: 100,
+  },
+  fabCartBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#E53935',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fabCartBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
 
