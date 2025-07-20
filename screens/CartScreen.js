@@ -125,6 +125,46 @@ const CartScreen = () => {
     }
   };
 
+  // --- NUEVAS FUNCIONES PARA EDITAR EL CARRITO ---
+  const updateQuantity = async (product_id, newQuantity) => {
+    if (newQuantity < 1) return;
+    try {
+      await apiFetch('/store/cart/update', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id, quantity: newQuantity }),
+      });
+      fetchCart();
+    } catch (err) {
+      Alert.alert('Error', 'No se pudo actualizar la cantidad.');
+    }
+  };
+
+  const removeProduct = async (product_id) => {
+    try {
+      await apiFetch('/store/cart/remove', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id }),
+      });
+      fetchCart();
+    } catch (err) {
+      Alert.alert('Error', 'No se pudo eliminar el producto.');
+    }
+  };
+
+  const clearCart = async () => {
+    try {
+      await apiFetch('/store/cart/clear', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      fetchCart();
+    } catch (err) {
+      Alert.alert('Error', 'No se pudo vaciar el carrito.');
+    }
+  };
+
   return (
     <View style={[styles.container, isDark && { backgroundColor: '#111' }]}> 
       <Text style={[styles.title, isDark && { color: '#fff' }]}>Mi Carrito</Text>
@@ -140,32 +180,70 @@ const CartScreen = () => {
         </View>
       ) : cart && cart.cart_products && cart.cart_products.length > 0 ? (
         <>
+          {/* Botón para vaciar carrito */}
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#E53935',
+              borderRadius: 12,
+              padding: 16,
+              marginBottom: 16,
+              width: '100%',
+              shadowColor: '#000',
+              shadowOpacity: 0.12,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+            onPress={clearCart}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="trash" size={22} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>Vaciar carrito</Text>
+          </TouchableOpacity>
+
           <ScrollView style={{ flex: 1 }}>
             {cart.cart_products.map(item => (
               <View key={item.id} style={[styles.productCard, isDark && styles.productCardDark]}>
                 <Image source={{ uri: item.product.image_url }} style={styles.productImage} />
                 <View style={styles.productInfo}>
-                  <Text style={[styles.productTitle, isDark && { color: '#fff' }]}>
-                    {item.product.title}
-                  </Text>
-                  <Text style={[styles.productDesc, isDark && { color: '#bbb' }]} numberOfLines={2}>
-                    {item.product.description}
-                  </Text>
+                  <Text style={[styles.productTitle, isDark && { color: '#fff' }]}> {item.product.title} </Text>
+                  <Text style={[styles.productDesc, isDark && { color: '#bbb' }]} numberOfLines={2}> {item.product.description} </Text>
                   <View style={styles.row}>
-                    <Text style={[styles.price, isDark && { color: '#fff' }]}>
-                      ${item.product.price} x {item.quantity}
-                    </Text>
-                    <Text style={[styles.subtotal, isDark && { color: TITLE_COLOR }]}>
-                      Subtotal: ${item.product.price * item.quantity}
-                    </Text>
+                    <Text style={[styles.price, isDark && { color: '#fff' }]}> Bs{item.product.price} </Text>
+                    {/* Controles de cantidad */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <TouchableOpacity
+                        style={{ padding: 6, backgroundColor: '#eee', borderRadius: 8 }}
+                        onPress={() => updateQuantity(item.product.id, item.quantity - 1)}
+                      >
+                        <Ionicons name="remove" size={18} color="#333" />
+                      </TouchableOpacity>
+                      <Text style={{ minWidth: 24, textAlign: 'center', color: isDark ? '#fff' : '#333', fontWeight: 'bold' }}>{item.quantity}</Text>
+                      <TouchableOpacity
+                        style={{ padding: 6, backgroundColor: '#eee', borderRadius: 8 }}
+                        onPress={() => updateQuantity(item.product.id, item.quantity + 1)}
+                      >
+                        <Ionicons name="add" size={18} color="#333" />
+                      </TouchableOpacity>
+                      {/* Botón eliminar producto */}
+                      <TouchableOpacity
+                        style={{ marginLeft: 8, padding: 6, backgroundColor: '#E53935', borderRadius: 8 }}
+                        onPress={() => removeProduct(item.product.id)}
+                      >
+                        <Ionicons name="trash" size={18} color="#fff" />
+                      </TouchableOpacity>
+                    </View>
                   </View>
+                  <Text style={[styles.subtotal, isDark && { color: TITLE_COLOR }]}> Subtotal: Bs{item.product.price * item.quantity} </Text>
                 </View>
               </View>
             ))}
-            
+
             <View style={styles.totalContainer}>
               <Text style={[styles.totalLabel, isDark && { color: '#fff' }]}>Total:</Text>
-              <Text style={[styles.totalValue, isDark && { color: TITLE_COLOR }]}>${getTotal()}</Text>
+              <Text style={[styles.totalValue, isDark && { color: TITLE_COLOR }]}>Bs{getTotal()}</Text>
             </View>
           </ScrollView>
           
