@@ -68,11 +68,6 @@ const Profile = () => {
     navigation.navigate('EditProfile');
   };
 
-  const handleChangePassword = () => {
-    console.log('[Profile] Navegando a ChangePassW');
-    navigation.navigate('ChangePassW');
-  };
-
   if (loading) {
     return (
       <View style={[styles.container, isDark && styles.containerDark]}>
@@ -133,13 +128,6 @@ const Profile = () => {
           onPress={handleEditProfile}
         >
           <Text style={styles.buttonText}>Editar perfil</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, styles.editButton]}
-          onPress={handleChangePassword}
-        >
-          <Text style={styles.buttonText}>Cambiar contraseña</Text>
         </TouchableOpacity>
       </View>
     </View>
