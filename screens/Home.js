@@ -225,6 +225,7 @@ const Home = () => {
   // Función para abrir el modal de beneficios
   const openBenefitsModal = (benefitTitle) => {
     const benefitData = BENEFITS_DATA[benefitTitle];
+    console.log('[DEBUG] openBenefitsModal:', benefitTitle, benefitData);
     if (benefitData) {
       setSelectedBenefit(benefitData);
       setShowBenefitsModal(true);
@@ -294,148 +295,151 @@ const Home = () => {
   // Renderizar el modal de beneficios
   const renderBenefitsModal = () => {
     if (!selectedBenefit) return null;
-
+    console.log('[DEBUG] renderBenefitsModal selectedBenefit:', selectedBenefit);
     return (
-        <Modal
-            visible={showBenefitsModal}
-            transparent={true}
-            animationType="none"
-            onRequestClose={closeBenefitsModal}
-            statusBarTranslucent={true}
+      <Modal
+        visible={showBenefitsModal}
+        transparent={true}
+        animationType="none"
+        onRequestClose={closeBenefitsModal}
+        statusBarTranslucent={true}
+        hardwareAccelerated={true}
+      >
+        <StatusBar backgroundColor="rgba(0,0,0,0.7)" barStyle="light-content" />
+        <Animated.View
+          style={[
+            styles.modalOverlay,
+            { opacity: modalAnimation }
+          ]}
         >
-          <StatusBar backgroundColor="rgba(0,0,0,0.7)" barStyle="light-content" />
+          {/* Botón de cierre de fondo */}
+          <TouchableOpacity
+            style={StyleSheet.absoluteFillObject}
+            onPress={closeBenefitsModal}
+            activeOpacity={1}
+          />
           <Animated.View
-              style={[
-                styles.modalOverlay,
-                {
-                  opacity: modalAnimation,
-                }
-              ]}
-          >
-            <Animated.View
-                style={[
-                  styles.modalContainer,
+            style={[
+              styles.modalContainer,
+              {
+                backgroundColor: theme.surface,
+                minHeight: 350, // Asegura altura mínima para móviles
+                transform: [
                   {
-                    backgroundColor: theme.surface,
-                    transform: [
-                      {
-                        scale: contentAnimation.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0.8, 1],
-                        })
-                      },
-                      {
-                        translateY: contentAnimation.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [50, 0],
-                        })
-                      }
-                    ],
-                    opacity: contentAnimation,
+                    scale: contentAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.8, 1],
+                    })
+                  },
+                  {
+                    translateY: contentAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [50, 0],
+                    })
                   }
-                ]}
-            >
-              {/* Header del modal */}
-              <View style={[styles.modalHeader, { backgroundColor: selectedBenefit.color }]}>
-                <View style={styles.modalHeaderContent}>
-                  <View style={styles.modalIconContainer}>
-                    <Ionicons name={selectedBenefit.icon} size={32} color="#FFF" />
-                  </View>
-                  <View style={styles.modalTitleContainer}>
-                    <Text style={styles.modalTitle}>{selectedBenefit.title}</Text>
-                    <Text style={styles.modalSubtitle}>{selectedBenefit.shortDesc}</Text>
-                  </View>
+                ],
+                opacity: contentAnimation,
+              }
+            ]}
+          >
+            {/* Header del modal */}
+            <View style={[styles.modalHeader, { backgroundColor: selectedBenefit.color }]}> 
+              <View style={styles.modalHeaderContent}>
+                <View style={styles.modalIconContainer}>
+                  <Ionicons name={selectedBenefit.icon} size={32} color="#FFF" />
                 </View>
-                <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={closeBenefitsModal}
-                    activeOpacity={0.8}
-                >
-                  <Ionicons name="close" size={24} color="#FFF" />
-                </TouchableOpacity>
+                <View style={styles.modalTitleContainer}>
+                  <Text style={styles.modalTitle}>{selectedBenefit.title}</Text>
+                  <Text style={styles.modalSubtitle}>{selectedBenefit.shortDesc}</Text>
+                </View>
               </View>
-
-              {/* Contenido del modal */}
-              <ScrollView
-                  style={styles.modalContent}
-                  showsVerticalScrollIndicator={false}
-                  bounces={true}
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={closeBenefitsModal}
+                activeOpacity={0.8}
               >
-                {/* Descripción principal */}
-                <View style={styles.modalSection}>
-                  <Text style={[styles.modalSectionTitle, { color: theme.text }]}>
-                    ¿Cómo funciona?
-                  </Text>
-                  <Text style={[styles.modalDescription, { color: theme.textSecondary }]}>
-                    {selectedBenefit.howItWorks}
-                  </Text>
-                </View>
+                <Ionicons name="close" size={24} color="#FFF" />
+              </TouchableOpacity>
+            </View>
 
-                {/* Detalles */}
-                <View style={styles.modalSection}>
-                  <Text style={[styles.modalSectionTitle, { color: theme.text }]}>
-                    Detalles del beneficio
-                  </Text>
-                  {selectedBenefit.details.map((detail, index) => (
-                      <View key={index} style={styles.detailItem}>
-                        <View style={[styles.detailBullet, { backgroundColor: selectedBenefit.color }]} />
-                        <Text style={[styles.detailText, { color: theme.textSecondary }]}>
-                          {detail}
-                        </Text>
-                      </View>
-                  ))}
-                </View>
+            {/* Texto de prueba fuera del ScrollView */}
+            {/* <Text style={{ color: 'red', textAlign: 'center' }}>PRUEBA FUERA DEL SCROLLVIEW</Text> */}
 
-                {/* Beneficios específicos */}
-                <View style={styles.modalSection}>
-                  <Text style={[styles.modalSectionTitle, { color: theme.text }]}>
-                    Resultados que notarás
+            {/* Contenido del modal - MEJORADO PARA ANDROID */}
+            <ScrollView
+              style={styles.modalContent}
+              showsVerticalScrollIndicator={false}
+              bounces={true}
+              nestedScrollEnabled={true}
+              removeClippedSubviews={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
+            >
+              {/* DEBUG: Mostrar datos del beneficio en la APK */}
+              {/*
+              <View style={{ backgroundColor: '#222', padding: 16, borderRadius: 12, marginBottom: 16, minHeight: 120, maxHeight: 300 }}>
+                <ScrollView>
+                  <Text style={{ color: '#fff', fontSize: 14 }}>
+                    [DEBUG] selectedBenefit:{"\n"}
+                    {JSON.stringify(selectedBenefit, null, 2)}
                   </Text>
-                  <View style={styles.benefitsGrid}>
-                    {selectedBenefit.benefits.map((benefit, index) => (
-                        <View key={index} style={[styles.benefitItem, { backgroundColor: theme.background }]}>
-                          <Ionicons name="checkmark-circle" size={20} color={selectedBenefit.color} />
-                          <Text style={[styles.benefitItemText, { color: theme.text }]}>
-                            {benefit}
-                          </Text>
-                        </View>
-                    ))}
+                </ScrollView>
+              </View>
+              */}
+              {/* Descripción principal */}
+              <View style={styles.modalSection}>
+                <Text style={[styles.modalSectionTitle, { color: theme.text }]}>¿Cómo funciona?</Text>
+                <Text style={[styles.modalDescription, { color: theme.textSecondary }]}> {selectedBenefit.howItWorks} </Text>
+              </View>
+              {/* Detalles */}
+              <View style={styles.modalSection}>
+                <Text style={[styles.modalSectionTitle, { color: theme.text }]}>Detalles del beneficio</Text>
+                {selectedBenefit.details && selectedBenefit.details.map((detail, index) => (
+                  <View key={`detail-${index}`} style={styles.detailItem}>
+                    <View style={[styles.detailBullet, { backgroundColor: selectedBenefit.color }]} />
+                    <Text style={[styles.detailText, { color: theme.textSecondary }]}> {detail} </Text>
                   </View>
-                </View>
-
-                {/* Tips de uso */}
-                <View style={styles.modalSection}>
-                  <Text style={[styles.modalSectionTitle, { color: theme.text }]}>
-                    Tips para mejores resultados
-                  </Text>
-                  {selectedBenefit.tips.map((tip, index) => (
-                      <View key={index} style={styles.tipItem}>
-                        <View style={[styles.tipNumber, { backgroundColor: selectedBenefit.color }]}>
-                          <Text style={styles.tipNumberText}>{index + 1}</Text>
-                        </View>
-                        <Text style={[styles.tipText, { color: theme.textSecondary }]}>
-                          {tip}
-                        </Text>
-                      </View>
+                ))}
+              </View>
+              {/* Beneficios específicos */}
+              <View style={styles.modalSection}>
+                <Text style={[styles.modalSectionTitle, { color: theme.text }]}>Resultados que notarás</Text>
+                <View style={styles.benefitsGrid}>
+                  {selectedBenefit.benefits && selectedBenefit.benefits.map((benefit, index) => (
+                    <View key={`benefit-${index}`} style={[styles.benefitItem, { backgroundColor: theme.background }]}> 
+                      <Ionicons name="checkmark-circle" size={20} color={selectedBenefit.color} />
+                      <Text style={[styles.benefitItemText, { color: theme.text }]}> {benefit} </Text>
+                    </View>
                   ))}
                 </View>
-
-                {/* CTA */}
-                <TouchableOpacity
-                    style={[styles.modalCTA, { backgroundColor: selectedBenefit.color }]}
-                    onPress={() => {
-                      closeBenefitsModal();
-                      scrollToProducts();
-                    }}
-                    activeOpacity={0.8}
-                >
-                  <Text style={styles.modalCTAText}>Ver Productos</Text>
-                  <Ionicons name="arrow-forward" size={20} color="#FFF" />
-                </TouchableOpacity>
-              </ScrollView>
-            </Animated.View>
+              </View>
+              {/* Tips de uso */}
+              <View style={styles.modalSection}>
+                <Text style={[styles.modalSectionTitle, { color: theme.text }]}>Tips para mejores resultados</Text>
+                {selectedBenefit.tips && selectedBenefit.tips.map((tip, index) => (
+                  <View key={`tip-${index}`} style={styles.tipItem}>
+                    <View style={[styles.tipNumber, { backgroundColor: selectedBenefit.color }]}> <Text style={styles.tipNumberText}>{index + 1}</Text> </View>
+                    <Text style={[styles.tipText, { color: theme.textSecondary }]}> {tip} </Text>
+                  </View>
+                ))}
+              </View>
+              {/* CTA */}
+              <TouchableOpacity
+                style={[styles.modalCTA, { backgroundColor: selectedBenefit.color }]}
+                onPress={() => {
+                  closeBenefitsModal();
+                  scrollToProducts();
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCTAText}>Ver Productos</Text>
+                <Ionicons name="arrow-forward" size={20} color="#FFF" />
+              </TouchableOpacity>
+              <View style={{ height: 20 }} />
+            </ScrollView>
           </Animated.View>
-        </Modal>
+        </Animated.View>
+      </Modal>
     );
   };
 
