@@ -19,12 +19,13 @@ import PasswordRecoveryScreen from './screens/PasswordRecoveryScreen';
 import EditProfile from './screens/EditProfile';
 import ChangePassW from './screens/ChangePassW';
 import CartScreen from './screens/CartScreen';
+import Estadisticas from './screens/Estadisticas';
 
 const Stack = createNativeStackNavigator();
 
 function AppContent() {
   const colorScheme = useColorScheme();
-  const { loading, accessToken, logout } = useAuth();
+  const { loading, accessToken, logout, user } = useAuth();
   const [menuVisible, setMenuVisible] = useState(false);
   const navigationRef = useRef(null);
   
@@ -40,6 +41,36 @@ function AppContent() {
     );
   }
   
+  // Opciones del menú
+  const menuOptions = [
+    {
+      label: 'Perfil',
+      icon: 'person',
+      onPress: () => {
+        setMenuVisible(false);
+        navigationRef.current?.navigate('Profile');
+      }
+    },
+    // Solo para superusuarios
+    ...(user && user.is_superuser ? [{
+      label: 'Ver estadísticas',
+      icon: 'stats-chart',
+      onPress: () => {
+        setMenuVisible(false);
+        // Aquí puedes navegar a la pantalla de estadísticas
+        navigationRef.current?.navigate('Estadisticas');
+      }
+    }] : []),
+    {
+      label: 'Cerrar Sesión',
+      icon: 'log-out',
+      destructive: true,
+      onPress: () => {
+        logout();
+      }
+    }
+  ];
+
   return (
     <NetworkCheck>
       <NavigationContainer ref={navigationRef} theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
@@ -83,6 +114,7 @@ function AppContent() {
               <Stack.Screen name="EditProfile" component={EditProfile} options={{ title: 'Editar Perfil' }} />
               <Stack.Screen name="ChangePassW" component={ChangePassW} options={{ title: 'Cambiar contraseña' }} />
               <Stack.Screen name="Cart" component={CartScreen} options={{ title: 'Carrito' }} />
+              <Stack.Screen name="Estadisticas" component={Estadisticas} options={{ title: 'Estadísticas' }} />
             </>
           )}
         </Stack.Navigator>
@@ -91,24 +123,7 @@ function AppContent() {
           visible={menuVisible}
           onClose={() => setMenuVisible(false)}
           title="Opciones"
-          options={[
-            {
-              label: 'Perfil',
-              icon: 'person',
-              onPress: () => {
-                setMenuVisible(false);
-                navigationRef.current?.navigate('Profile');
-              }
-            },
-            {
-              label: 'Cerrar Sesión',
-              icon: 'log-out',
-              destructive: true,
-              onPress: () => {
-                logout();
-              }
-            }
-          ]}
+          options={menuOptions}
         />
         
         <Toast />

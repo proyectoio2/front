@@ -63,7 +63,8 @@ const Login = () => {
           data.data.access_token,
           data.data.expires_in || 1800,
           data.data.refresh_token,
-          data.data.refresh_expires_in || 604800
+          data.data.refresh_expires_in || 604800,
+          data.data.user // <-- PASAR PERFIL DE USUARIO
         );
         console.log('accessToken:', accessToken);
        //navigation.navigate('Home', { screen: 'Inicio' });

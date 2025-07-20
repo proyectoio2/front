@@ -33,10 +33,12 @@ export const AuthProvider = ({ children }) => {
   const [tokenExpiry, setTokenExpiry] = useState(null);
   const [refreshExpiry, setRefreshExpiry] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null); // Nuevo estado para el perfil
   const TOKEN_KEY = 'flora_token';
   const EXPIRY_KEY = 'flora_token_expiry';
   const REFRESH_KEY = 'flora_refresh_token';
   const REFRESH_EXPIRY_KEY = 'flora_refresh_token_expiry';
+  const USER_KEY = 'flora_user';
 
   // Restaurar tokens al iniciar (sin expiración local)
   useEffect(() => {
@@ -46,10 +48,12 @@ export const AuthProvider = ({ children }) => {
         const expiry = await storage.getItem(EXPIRY_KEY);
         const refresh = await storage.getItem(REFRESH_KEY);
         const refreshExp = await storage.getItem(REFRESH_EXPIRY_KEY);
+        const userStr = await storage.getItem(USER_KEY);
         setAccessToken(token || null);
         setTokenExpiry(expiry ? parseInt(expiry, 10) : null);
         setRefreshToken(refresh || null);
         setRefreshExpiry(refreshExp ? parseInt(refreshExp, 10) : null);
+        setUser(userStr ? JSON.parse(userStr) : null);
       } catch {}
       setLoading(false);
     };
@@ -63,22 +67,25 @@ export const AuthProvider = ({ children }) => {
       const expiry = await storage.getItem(EXPIRY_KEY);
       const refresh = await storage.getItem(REFRESH_KEY);
       const refreshExp = await storage.getItem(REFRESH_EXPIRY_KEY);
+      const userStr = await storage.getItem(USER_KEY);
       setAccessToken(token || null);
       setTokenExpiry(expiry ? parseInt(expiry, 10) : null);
       setRefreshToken(refresh || null);
       setRefreshExpiry(refreshExp ? parseInt(refreshExp, 10) : null);
+      setUser(userStr ? JSON.parse(userStr) : null);
     };
     tokenEvents.on('tokenRefreshed', onTokenRefreshed);
     return () => tokenEvents.off('tokenRefreshed', onTokenRefreshed);
   }, []);
 
   // Login: guarda ambos tokens y expiraciones
-  const login = async (token, expiresInSeconds, refresh, refreshExpiresInSeconds) => {
+  const login = async (token, expiresInSeconds, refresh, refreshExpiresInSeconds, userProfile) => {
     if (!token || !refresh) {
       throw new Error('Credenciales inválidas');
     }
     setAccessToken(token);
     setRefreshToken(refresh);
+    setUser(userProfile || null);
     const expiryTime = Date.now() + expiresInSeconds * 1000;
     const refreshExpTime = Date.now() + refreshExpiresInSeconds * 1000;
     setTokenExpiry(expiryTime);
@@ -89,6 +96,7 @@ export const AuthProvider = ({ children }) => {
         [EXPIRY_KEY, expiryTime.toString()],
         [REFRESH_KEY, refresh],
         [REFRESH_EXPIRY_KEY, refreshExpTime.toString()],
+        [USER_KEY, userProfile ? JSON.stringify(userProfile) : ''],
       ]);
     } catch (error) {
       console.error('Error al guardar tokens:', error);
@@ -102,12 +110,14 @@ export const AuthProvider = ({ children }) => {
     setTokenExpiry(null);
     setRefreshToken(null);
     setRefreshExpiry(null);
+    setUser(null);
     try {
       await storage.multiRemove([
         TOKEN_KEY,
         EXPIRY_KEY,
         REFRESH_KEY,
         REFRESH_EXPIRY_KEY,
+        USER_KEY,
       ]);
     } catch {}
   };
@@ -167,7 +177,7 @@ export const AuthProvider = ({ children }) => {
   }, [tokenExpiry]);
 
   return (
-    <AuthContext.Provider value={{ accessToken, login, logout, loading }}>
+    <AuthContext.Provider value={{ accessToken, login, logout, loading, user }}>
       {children}
     </AuthContext.Provider>
   );
