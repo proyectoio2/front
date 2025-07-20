@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, useColorScheme, ScrollView, Linking, Image, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../core/AuthContext';
@@ -46,6 +46,10 @@ const Home = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const scrollRef = useRef(null);
+  const productsSectionRef = useRef(null);
+  const [productsY, setProductsY] = useState(0);
 
   useEffect(() => {
     if (accessToken) {
@@ -117,6 +121,18 @@ const Home = () => {
       fetchCartCount();
     } catch (err) {
       console.error('Error al agregar al carrito:', err);
+    }
+  };
+
+  // Medir la posición de la sección de productos
+  const onProductsLayout = (event) => {
+    setProductsY(event.nativeEvent.layout.y);
+  };
+
+  // Scroll automático al presionar el botón
+  const scrollToProducts = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ y: productsY - 20, animated: true });
     }
   };
 
@@ -219,6 +235,7 @@ const Home = () => {
   return (
       <View style={{ flex: 1 }}>
         <ScrollView
+            ref={scrollRef}
             style={[styles.container, { backgroundColor: theme.background }]}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
@@ -260,6 +277,7 @@ const Home = () => {
                 <TouchableOpacity
                     style={[styles.heroButton, { backgroundColor: COLORS.secondary }]}
                     activeOpacity={0.8}
+                    onPress={scrollToProducts}
                 >
                   <Text style={styles.heroButtonText}>VER PRODUCTOS</Text>
                   <Ionicons name="arrow-down" size={20} color="#FFF" />
@@ -324,7 +342,11 @@ const Home = () => {
           </View>
 
           {/* Productos */}
-          <View style={styles.productsSection}>
+          <View
+            style={styles.productsSection}
+            ref={productsSectionRef}
+            onLayout={onProductsLayout}
+          >
             <View style={styles.productsHeader}>
               <Text style={[styles.sectionTitle, { color: theme.text }]}>
                 Nuestros Geles Capilares
