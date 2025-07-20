@@ -20,6 +20,7 @@ import EditProfile from './screens/EditProfile';
 import ChangePassW from './screens/ChangePassW';
 import CartScreen from './screens/CartScreen';
 import Estadisticas from './screens/Estadisticas';
+import EditarProductos from './screens/EditarProductos';
 
 const Stack = createNativeStackNavigator();
 
@@ -52,15 +53,24 @@ function AppContent() {
       }
     },
     // Solo para superusuarios
-    ...(user && user.is_superuser ? [{
-      label: 'Ver estadísticas',
-      icon: 'stats-chart',
-      onPress: () => {
-        setMenuVisible(false);
-        // Aquí puedes navegar a la pantalla de estadísticas
-        navigationRef.current?.navigate('Estadisticas');
+    ...(user && user.is_superuser ? [
+      {
+        label: 'Ver estadísticas',
+        icon: 'stats-chart',
+        onPress: () => {
+          setMenuVisible(false);
+          navigationRef.current?.navigate('Estadisticas');
+        }
+      },
+      {
+        label: 'Editar productos',
+        icon: 'create',
+        onPress: () => {
+          setMenuVisible(false);
+          navigationRef.current?.navigate('EditarProductos');
+        }
       }
-    }] : []),
+    ] : []),
     {
       label: 'Cerrar Sesión',
       icon: 'log-out',
@@ -115,6 +125,7 @@ function AppContent() {
               <Stack.Screen name="ChangePassW" component={ChangePassW} options={{ title: 'Cambiar contraseña' }} />
               <Stack.Screen name="Cart" component={CartScreen} options={{ title: 'Carrito' }} />
               <Stack.Screen name="Estadisticas" component={Estadisticas} options={{ title: 'Estadísticas' }} />
+              <Stack.Screen name="EditarProductos" component={EditarProductos} options={{ title: 'Editar productos' }} />
             </>
           )}
         </Stack.Navigator>
