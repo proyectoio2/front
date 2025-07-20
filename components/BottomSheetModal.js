@@ -9,6 +9,7 @@ import {
   Pressable,
   Dimensions,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -18,33 +19,12 @@ const BottomSheetModal = ({ visible, onClose, title, options = [] }) => {
   // Verificar que options sea iterable y convertir a array para evitar error
   const safeOptions = Array.isArray(options) ? options : [];
 
-  // // Para debugging, render estático sin map (descomenta para probar)
-/*
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
       <View style={styles.container}>
         <Text style={styles.title}>{title}</Text>
-        <TouchableOpacity style={styles.button} onPress={() => { safeOptions[0]?.onPress(); onClose(); }}>
-          <Text style={styles.buttonText}>{safeOptions[0]?.label || 'Opción 1'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.destructiveButton]} onPress={() => { safeOptions[1]?.onPress(); onClose(); }}>
-          <Text style={[styles.buttonText, styles.destructiveText]}>{safeOptions[1]?.label || 'Opción 2'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-          <Text style={styles.cancelText}>Cancelar</Text>
-        </TouchableOpacity>
-      </View>
-    </Modal>
-  );
-*/
-
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
-      <View style={styles.container}>
-        <Text style={styles.title}>{title}</Text>
-        {[...safeOptions].map(({ label, onPress, destructive }, i) => (
+        {[...safeOptions].map(({ label, onPress, destructive, icon }, i) => (
           <TouchableOpacity
             key={i}
             style={[styles.button, destructive && styles.destructiveButton]}
@@ -53,6 +33,7 @@ const BottomSheetModal = ({ visible, onClose, title, options = [] }) => {
               onClose();
             }}
           >
+            {icon && <Ionicons name={icon} size={20} color={destructive ? '#E53935' : '#333'} style={styles.buttonIcon} />}
             <Text style={[styles.buttonText, destructive && styles.destructiveText]}>
               {label}
             </Text>
@@ -69,61 +50,61 @@ const BottomSheetModal = ({ visible, onClose, title, options = [] }) => {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   container: {
     position: 'absolute',
     bottom: 0,
-    width: '100%',
+    left: 0,
+    right: 0,
     backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 24,
-    paddingBottom: 30,
-    paddingHorizontal: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -5 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 10,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: SCREEN_HEIGHT * 0.6,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#4CAF50',
-    marginBottom: 24,
     textAlign: 'center',
+    marginBottom: 20,
+    color: '#333',
   },
   button: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    // boxShadow no existe en RN, eliminé para evitar conflictos
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginBottom: 8,
+    backgroundColor: '#f8f9fa',
   },
-  destructiveButton: {
-    backgroundColor: '#ff0000',
-    borderRadius: 16,
+  buttonIcon: {
+    marginRight: 12,
   },
   buttonText: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#333',
-    textAlign: 'center',
+    fontWeight: '500',
+  },
+  destructiveButton: {
+    backgroundColor: '#ffebee',
   },
   destructiveText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: '#E53935',
   },
   cancelButton: {
-    marginTop: 12,
+    marginTop: 10,
     paddingVertical: 16,
-    backgroundColor: '#eee',
-    borderRadius: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: '#f1f3f4',
+    alignItems: 'center',
   },
   cancelText: {
-    fontSize: 18,
-    color: '#333',
-    textAlign: 'center',
-    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
   },
 });
 

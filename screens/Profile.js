@@ -10,74 +10,79 @@ import {
 import { useAuth } from '../core/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { apiFetch } from '../core/api';
 
 const Profile = () => {
-  const { accessToken, logout } = useAuth();
+  const { accessToken } = useAuth();
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const [profile, setProfile] = useState({ email: '', username: '' });
+  const [profile, setProfile] = useState({
+    email: '',
+    full_name: '',
+    phone_number: '',
+    address: '',
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      console.log('[Profile] fetchProfile iniciado con accessToken:', accessToken);
-      const url = 'https://florafind-aau6a.ondigitalocean.app/auth/me';
-      console.log('[Profile] Fetch URL:', url);
-      try {
-        console.log('[Profile] Enviando GET /auth/me');
-        const response = await fetch(url, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            Accept: 'application/json',
-          },
-        });
-        console.log('[Profile] Respuesta recibida status:', response.status);
-        const text = await response.text();
-        console.log('[Profile] Respuesta text:', text);
-        let json = null;
-        try {
-          json = JSON.parse(text);
-          console.log('[Profile] Parsed JSON:', json);
-        } catch (parseErr) {
-          console.warn('[Profile] Error parsing JSON:', parseErr);
-        }
-
-        if (response.ok && json && json.data) {
-          console.log('[Profile] Datos obtenidos:', json.data);
-          setProfile({
-            email: json.data.email,
-            username: json.data.username,
-          });
-        } else {
-          console.warn(
-            '[Profile] Falló carga de perfil, detalle:',
-            json?.detail || 'Sin detalle'
-          );
-        }
-      } catch (err) {
-        console.error('[Profile] Error de red en fetchProfile:', err);
-      } finally {
-        console.log('[Profile] fetchProfile finalizado');
-        setLoading(false);
-      }
-    };
     fetchProfile();
-  }, [accessToken]);
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      console.log('[Profile] Cargando perfil...');
+      const { data, ok } = await apiFetch('/auth/me', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      console.log('[Profile] Respuesta:', { ok, data });
+      
+      if (ok && data && data.data) {
+        setProfile({
+          email: data.data.email || '',
+          full_name: data.data.full_name || '',
+          phone_number: data.data.phone_number || '',
+          address: data.data.address || '',
+        });
+        console.log('[Profile] Perfil actualizado:', {
+          email: data.data.email,
+          full_name: data.data.full_name,
+          phone_number: data.data.phone_number,
+          address: data.data.address,
+        });
+      } else {
+        console.error('[Profile] Error en respuesta:', data);
+      }
+    } catch (error) {
+      console.error('[Profile] Error al cargar perfil:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEditProfile = () => {
     console.log('[Profile] Navegando a EditProfile');
     navigation.navigate('EditProfile');
   };
+
   const handleChangePassword = () => {
     console.log('[Profile] Navegando a ChangePassW');
     navigation.navigate('ChangePassW');
   };
-  const handleLogout = () => {
-    console.log('[Profile] Cerrando sesión');
-    logout();
-  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, isDark && styles.containerDark]}>
+        <ActivityIndicator size="large" color={isDark ? '#aed581' : '#4CAF50'} />
+        <Text style={[styles.loadingText, isDark && styles.loadingTextDark]}>
+          Cargando perfil...
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, isDark && styles.containerDark]}>
@@ -91,21 +96,35 @@ const Profile = () => {
           />
         </View>
 
-        {loading ? (
-          <ActivityIndicator size="large" color={isDark ? '#aed581' : '#4CAF50'} />
-        ) : (
-          <View style={styles.infoContainer}>
-            <Text style={[styles.label, isDark && styles.labelDark]}>Correo electrónico</Text>
+        <View style={styles.infoContainer}>
+          <View style={styles.infoRow}>
+            <Text style={[styles.label, isDark && styles.labelDark]}>Nombre completo:</Text>
             <Text style={[styles.value, isDark && styles.valueDark]}>
-              {profile.email}
-            </Text>
-
-            <Text style={[styles.label, isDark && styles.labelDark]}>Nombre de usuario</Text>
-            <Text style={[styles.value, isDark && styles.valueDark]}>
-              {profile.username}
+              {profile.full_name || 'No especificado'}
             </Text>
           </View>
-        )}
+
+          <View style={styles.infoRow}>
+            <Text style={[styles.label, isDark && styles.labelDark]}>Correo electrónico:</Text>
+            <Text style={[styles.value, isDark && styles.valueDark]}>
+              {profile.email || 'No especificado'}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={[styles.label, isDark && styles.labelDark]}>Número de teléfono:</Text>
+            <Text style={[styles.value, isDark && styles.valueDark]}>
+              {profile.phone_number || 'No especificado'}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={[styles.label, isDark && styles.labelDark]}>Dirección:</Text>
+            <Text style={[styles.value, isDark && styles.valueDark]}>
+              {profile.address || 'No especificado'}
+            </Text>
+          </View>
+        </View>
       </View>
 
       <View style={styles.buttonGroup}>
@@ -121,13 +140,6 @@ const Profile = () => {
           onPress={handleChangePassword}
         >
           <Text style={styles.buttonText}>Cambiar contraseña</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, styles.logoutButton]}
-          onPress={handleLogout}
-        >
-          <Text style={styles.buttonText}>Cerrar sesión</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -149,31 +161,34 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
     color: '#333',
-    alignItems: "center",
+    textAlign: 'center',
   },
   titleDark: {
     color: '#aed581',
   },
   profileImageContainer: {
     alignSelf: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
   },
   infoContainer: {
-    marginTop: 8,
     marginBottom: 32,
+  },
+  infoRow: {
+    marginBottom: 16,
   },
   label: {
     fontSize: 14,
     color: '#666',
-    marginTop: 16,
+    marginBottom: 4,
+    fontWeight: '600',
   },
   labelDark: {
     color: '#aaa',
   },
   value: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#333',
-    marginTop: 4,
+    fontWeight: '500',
   },
   valueDark: {
     color: '#fff',
@@ -189,13 +204,19 @@ const styles = StyleSheet.create({
   editButton: {
     backgroundColor: '#4CAF50',
   },
-  logoutButton: {
-    backgroundColor: '#E53935',
-  },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 16,
+  },
+  loadingTextDark: {
+    color: '#ccc',
   },
 });
 
