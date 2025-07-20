@@ -1,5 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useColorScheme, ScrollView, Linking, Image, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  useColorScheme,
+  ScrollView,
+  Linking,
+  Image,
+  Dimensions,
+  Modal,
+  Animated,
+  StatusBar
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../core/AuthContext';
 import { useNavigation } from '@react-navigation/native';
@@ -35,6 +48,106 @@ const COLORS = {
   }
 };
 
+// Datos detallados de beneficios
+const BENEFITS_DATA = {
+  'Hidratación': {
+    icon: 'water',
+    title: 'Hidratación Profunda',
+    shortDesc: 'Cabello suave y sedoso',
+    color: COLORS.primary,
+    details: [
+      'El aloe vera contiene 99% de agua natural que penetra profundamente en el cabello',
+      'Restaura la humedad perdida por factores ambientales y químicos',
+      'Mantiene el cabello hidratado por hasta 24 horas',
+      'Reduce la sequedad y la caspa causada por falta de hidratación'
+    ],
+    benefits: [
+      'Cabello más suave al tacto',
+      'Reducción del frizz',
+      'Mayor manejabilidad',
+      'Brillo natural duradero'
+    ],
+    howItWorks: 'Los polisacáridos del aloe vera forman una película protectora que retiene la humedad natural del cabello, mientras que sus aminoácidos nutren desde la raíz.',
+    tips: [
+      'Aplica en cabello húmedo para mejor absorción',
+      'Masajea suavemente desde medios a puntas',
+      'Usa 2-3 veces por semana para resultados óptimos'
+    ]
+  },
+  'Protección': {
+    icon: 'shield-checkmark',
+    title: 'Protección Avanzada',
+    shortDesc: 'Contra daño ambiental',
+    color: COLORS.success,
+    details: [
+      'Crea una barrera natural contra rayos UV dañinos',
+      'Protege del calor de herramientas de peinado',
+      'Previene el daño causado por contaminación ambiental',
+      'Fortalece la cutícula capilar contra agresiones externas'
+    ],
+    benefits: [
+      'Cabello protegido del sol',
+      'Menor daño por calor',
+      'Resistencia a factores ambientales',
+      'Prevención de decoloración'
+    ],
+    howItWorks: 'Los antioxidantes naturales del aloe vera neutralizan los radicales libres, mientras que sus mucílagos crean una capa protectora invisible.',
+    tips: [
+      'Aplica antes de exposición solar',
+      'Úsalo como protector térmico natural',
+      'Ideal para cabello teñido o tratado'
+    ]
+  },
+  'Fortalece': {
+    icon: 'flash',
+    title: 'Fortalecimiento Integral',
+    shortDesc: 'Desde la raíz',
+    color: COLORS.secondary,
+    details: [
+      'Estimula la circulación sanguínea en el cuero cabelludo',
+      'Aporta vitaminas A, C, E y complejo B esenciales',
+      'Fortalece la estructura interna del cabello',
+      'Reduce la caída y promueve el crecimiento saludable'
+    ],
+    benefits: [
+      'Cabello más resistente',
+      'Menos quiebre y caída',
+      'Crecimiento más rápido',
+      'Raíces más fuertes'
+    ],
+    howItWorks: 'Las enzimas proteolíticas del aloe vera mejoran la absorción de nutrientes, mientras que sus minerales fortalecen la estructura capilar desde adentro.',
+    tips: [
+      'Masajea el cuero cabelludo al aplicar',
+      'Deja actuar 10-15 minutos antes de peinar',
+      'Combina con una dieta rica en proteínas'
+    ]
+  },
+  'Brillo Natural': {
+    icon: 'sparkles',
+    title: 'Brillo Radiante',
+    shortDesc: 'Sin químicos agresivos',
+    color: COLORS.accent,
+    details: [
+      'Alisa la cutícula capilar para reflejar mejor la luz',
+      'Elimina residuos que opacan el cabello',
+      'Aporta luminosidad natural sin siliconas',
+      'Restaura el brillo perdido por tratamientos químicos'
+    ],
+    benefits: [
+      'Brillo natural y duradero',
+      'Cabello más luminoso',
+      'Apariencia saludable',
+      'Sin efecto graso'
+    ],
+    howItWorks: 'Los aminoácidos del aloe vera rellenan las micro-fisuras de la cutícula, creando una superficie lisa que refleja la luz de manera uniforme.',
+    tips: [
+      'Aplica en cabello limpio para mejor resultado',
+      'Evita el exceso para no crear peso',
+      'Combina con agua fría en el último enjuague'
+    ]
+  }
+};
+
 const Home = () => {
   const { accessToken } = useAuth();
   const navigation = useNavigation();
@@ -46,10 +159,15 @@ const Home = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const scrollRef = useRef(null);
   const productsSectionRef = useRef(null);
   const [productsY, setProductsY] = useState(0);
+
+  // Estados para el modal de beneficios
+  const [showBenefitsModal, setShowBenefitsModal] = useState(false);
+  const [selectedBenefit, setSelectedBenefit] = useState(null);
+  const [modalAnimation] = useState(new Animated.Value(0));
+  const [contentAnimation] = useState(new Animated.Value(0));
 
   useEffect(() => {
     if (accessToken) {
@@ -90,13 +208,10 @@ const Home = () => {
     try {
       setLoading(true);
       setError(null);
-
       const response = await fetch(`${API_BASE_URL}/store/products`);
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const data = await response.json();
       setProducts(data);
     } catch (err) {
@@ -105,6 +220,48 @@ const Home = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Función para abrir el modal de beneficios
+  const openBenefitsModal = (benefitTitle) => {
+    const benefitData = BENEFITS_DATA[benefitTitle];
+    if (benefitData) {
+      setSelectedBenefit(benefitData);
+      setShowBenefitsModal(true);
+
+      // Animaciones de entrada
+      Animated.parallel([
+        Animated.timing(modalAnimation, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(contentAnimation, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  };
+
+  // Función para cerrar el modal
+  const closeBenefitsModal = () => {
+    Animated.parallel([
+      Animated.timing(modalAnimation, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentAnimation, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowBenefitsModal(false);
+      setSelectedBenefit(null);
+    });
   };
 
   const openSocialLink = (url) => {
@@ -124,16 +281,162 @@ const Home = () => {
     }
   };
 
-  // Medir la posición de la sección de productos
   const onProductsLayout = (event) => {
     setProductsY(event.nativeEvent.layout.y);
   };
 
-  // Scroll automático al presionar el botón
   const scrollToProducts = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({ y: productsY - 20, animated: true });
     }
+  };
+
+  // Renderizar el modal de beneficios
+  const renderBenefitsModal = () => {
+    if (!selectedBenefit) return null;
+
+    return (
+        <Modal
+            visible={showBenefitsModal}
+            transparent={true}
+            animationType="none"
+            onRequestClose={closeBenefitsModal}
+            statusBarTranslucent={true}
+        >
+          <StatusBar backgroundColor="rgba(0,0,0,0.7)" barStyle="light-content" />
+          <Animated.View
+              style={[
+                styles.modalOverlay,
+                {
+                  opacity: modalAnimation,
+                }
+              ]}
+          >
+            <Animated.View
+                style={[
+                  styles.modalContainer,
+                  {
+                    backgroundColor: theme.surface,
+                    transform: [
+                      {
+                        scale: contentAnimation.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.8, 1],
+                        })
+                      },
+                      {
+                        translateY: contentAnimation.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [50, 0],
+                        })
+                      }
+                    ],
+                    opacity: contentAnimation,
+                  }
+                ]}
+            >
+              {/* Header del modal */}
+              <View style={[styles.modalHeader, { backgroundColor: selectedBenefit.color }]}>
+                <View style={styles.modalHeaderContent}>
+                  <View style={styles.modalIconContainer}>
+                    <Ionicons name={selectedBenefit.icon} size={32} color="#FFF" />
+                  </View>
+                  <View style={styles.modalTitleContainer}>
+                    <Text style={styles.modalTitle}>{selectedBenefit.title}</Text>
+                    <Text style={styles.modalSubtitle}>{selectedBenefit.shortDesc}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={closeBenefitsModal}
+                    activeOpacity={0.8}
+                >
+                  <Ionicons name="close" size={24} color="#FFF" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Contenido del modal */}
+              <ScrollView
+                  style={styles.modalContent}
+                  showsVerticalScrollIndicator={false}
+                  bounces={true}
+              >
+                {/* Descripción principal */}
+                <View style={styles.modalSection}>
+                  <Text style={[styles.modalSectionTitle, { color: theme.text }]}>
+                    ¿Cómo funciona?
+                  </Text>
+                  <Text style={[styles.modalDescription, { color: theme.textSecondary }]}>
+                    {selectedBenefit.howItWorks}
+                  </Text>
+                </View>
+
+                {/* Detalles */}
+                <View style={styles.modalSection}>
+                  <Text style={[styles.modalSectionTitle, { color: theme.text }]}>
+                    Detalles del beneficio
+                  </Text>
+                  {selectedBenefit.details.map((detail, index) => (
+                      <View key={index} style={styles.detailItem}>
+                        <View style={[styles.detailBullet, { backgroundColor: selectedBenefit.color }]} />
+                        <Text style={[styles.detailText, { color: theme.textSecondary }]}>
+                          {detail}
+                        </Text>
+                      </View>
+                  ))}
+                </View>
+
+                {/* Beneficios específicos */}
+                <View style={styles.modalSection}>
+                  <Text style={[styles.modalSectionTitle, { color: theme.text }]}>
+                    Resultados que notarás
+                  </Text>
+                  <View style={styles.benefitsGrid}>
+                    {selectedBenefit.benefits.map((benefit, index) => (
+                        <View key={index} style={[styles.benefitItem, { backgroundColor: theme.background }]}>
+                          <Ionicons name="checkmark-circle" size={20} color={selectedBenefit.color} />
+                          <Text style={[styles.benefitItemText, { color: theme.text }]}>
+                            {benefit}
+                          </Text>
+                        </View>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Tips de uso */}
+                <View style={styles.modalSection}>
+                  <Text style={[styles.modalSectionTitle, { color: theme.text }]}>
+                    Tips para mejores resultados
+                  </Text>
+                  {selectedBenefit.tips.map((tip, index) => (
+                      <View key={index} style={styles.tipItem}>
+                        <View style={[styles.tipNumber, { backgroundColor: selectedBenefit.color }]}>
+                          <Text style={styles.tipNumberText}>{index + 1}</Text>
+                        </View>
+                        <Text style={[styles.tipText, { color: theme.textSecondary }]}>
+                          {tip}
+                        </Text>
+                      </View>
+                  ))}
+                </View>
+
+                {/* CTA */}
+                <TouchableOpacity
+                    style={[styles.modalCTA, { backgroundColor: selectedBenefit.color }]}
+                    onPress={() => {
+                      closeBenefitsModal();
+                      scrollToProducts();
+                    }}
+                    activeOpacity={0.8}
+                >
+                  <Text style={styles.modalCTAText}>Ver Productos</Text>
+                  <Ionicons name="arrow-forward" size={20} color="#FFF" />
+                </TouchableOpacity>
+              </ScrollView>
+            </Animated.View>
+          </Animated.View>
+        </Modal>
+    );
   };
 
   const renderProduct = (product, index) => (
@@ -152,7 +455,6 @@ const Home = () => {
               <Text style={styles.stockBadgeText}>¡Solo quedan {product.stock}!</Text>
             </View>
         )}
-
         {/* Imagen del producto */}
         <View style={styles.productImageContainer}>
           {product.image_url ? (
@@ -166,19 +468,16 @@ const Home = () => {
                 <Ionicons name="water" size={60} color={COLORS.primary} />
               </View>
           )}
-
           {/* Botón de favorito */}
           <TouchableOpacity style={styles.favoriteBtn} activeOpacity={0.7}>
             <Ionicons name="heart-outline" size={24} color={theme.text} />
           </TouchableOpacity>
         </View>
-
         {/* Información del producto */}
         <View style={styles.productContent}>
           <Text style={[styles.productTitle, { color: theme.text }]} numberOfLines={2}>
             {product.title}
           </Text>
-
           {/* Rating */}
           <View style={styles.ratingRow}>
             <View style={styles.stars}>
@@ -188,11 +487,9 @@ const Home = () => {
             </View>
             <Text style={[styles.ratingText, { color: theme.textSecondary }]}>(4.8)</Text>
           </View>
-
           <Text style={[styles.productDescription, { color: theme.textSecondary }]} numberOfLines={3}>
             {product.description}
           </Text>
-
           {/* Precio y stock */}
           <View style={styles.priceRow}>
             <View style={styles.priceContainer}>
@@ -207,7 +504,6 @@ const Home = () => {
                     product.stock > 0 ? `Solo ${product.stock}` : 'Agotado'}
               </Text>
             </View>
-
             {/* Botón de agregar al carrito */}
             <TouchableOpacity
                 style={[
@@ -273,7 +569,6 @@ const Home = () => {
                   Gel capilar con aloe vera 100% natural{'\n'}
                   para un cabello fuerte y brillante
                 </Text>
-
                 <TouchableOpacity
                     style={[styles.heroButton, { backgroundColor: COLORS.secondary }]}
                     activeOpacity={0.8}
@@ -283,7 +578,6 @@ const Home = () => {
                   <Ionicons name="arrow-down" size={20} color="#FFF" />
                 </TouchableOpacity>
               </View>
-
               {/* Stats específicos */}
               <View style={styles.heroStats}>
                 <View style={styles.statItem}>
@@ -302,12 +596,11 @@ const Home = () => {
             </View>
           </View>
 
-          {/* Beneficios específicos para gel capilar */}
+          {/* Beneficios específicos para gel capilar - AHORA CON FUNCIONALIDAD */}
           <View style={styles.benefitsSection}>
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
               Beneficios del Aloe Vera
             </Text>
-
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -319,14 +612,19 @@ const Home = () => {
                 { icon: 'flash', title: 'Fortalece', desc: 'Desde la raíz', color: COLORS.secondary },
                 { icon: 'sparkles', title: 'Brillo Natural', desc: 'Sin químicos agresivos', color: COLORS.accent },
               ].map((benefit, index) => (
-                  <View key={index} style={[
-                    styles.benefitCard,
-                    {
-                      backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-                      borderColor: benefit.color,
-                      borderWidth: 2,
-                    }
-                  ]}>
+                  <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.benefitCard,
+                        {
+                          backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                          borderColor: benefit.color,
+                          borderWidth: 2,
+                        }
+                      ]}
+                      onPress={() => openBenefitsModal(benefit.title)}
+                      activeOpacity={0.8}
+                  >
                     <View style={[styles.benefitIcon, { backgroundColor: benefit.color }]}>
                       <Ionicons name={benefit.icon} size={28} color="#FFF" />
                     </View>
@@ -336,16 +634,22 @@ const Home = () => {
                     <Text style={[styles.benefitDesc, { color: theme.textSecondary }]}>
                       {benefit.desc}
                     </Text>
-                  </View>
+                    <View style={styles.benefitTapHint}>
+                      <Text style={[styles.benefitTapText, { color: benefit.color }]}>
+                        Toca para más info
+                      </Text>
+                      <Ionicons name="chevron-forward" size={16} color={benefit.color} />
+                    </View>
+                  </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
 
           {/* Productos */}
           <View
-            style={styles.productsSection}
-            ref={productsSectionRef}
-            onLayout={onProductsLayout}
+              style={styles.productsSection}
+              ref={productsSectionRef}
+              onLayout={onProductsLayout}
           >
             <View style={styles.productsHeader}>
               <Text style={[styles.sectionTitle, { color: theme.text }]}>
@@ -355,7 +659,6 @@ const Home = () => {
                 <Text style={styles.productsBadgeText}>{products.length}</Text>
               </View>
             </View>
-
             {loading ? (
                 <View style={styles.loadingState}>
                   <View style={[styles.loadingSpinner, { backgroundColor: COLORS.primary }]}>
@@ -391,7 +694,6 @@ const Home = () => {
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
               Cabello Transformado
             </Text>
-
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -432,7 +734,6 @@ const Home = () => {
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
               Síguenos para tips de cuidado capilar
             </Text>
-
             <View style={styles.socialContainer}>
               <TouchableOpacity
                   style={[styles.socialButton, styles.instagramBtn]}
@@ -443,7 +744,6 @@ const Home = () => {
                 <Text style={styles.socialText}>Instagram</Text>
                 <Text style={styles.socialSubtext}>@GelNatAloeVera123</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                   style={[styles.socialButton, styles.tiktokBtn]}
                   onPress={() => openSocialLink('https://www.tiktok.com/@grupoaloevera7')}
@@ -453,7 +753,6 @@ const Home = () => {
                 <Text style={styles.socialText}>TikTok</Text>
                 <Text style={styles.socialSubtext}>@grupoaloevera7</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                   style={[styles.socialButton, styles.facebookBtn]}
                   onPress={() => openSocialLink('https://www.facebook.com/share/1CXBfmbzVZ/?mibextid=wwXIfr')}
@@ -463,7 +762,6 @@ const Home = () => {
                 <Text style={styles.socialText}>Facebook</Text>
                 <Text style={styles.socialSubtext}>EcoStylo Oficial</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                   style={[styles.socialButton, styles.linktreeBtn]}
                   onPress={() => openSocialLink('https://linktr.ee/TESLAQUINCE')}
@@ -496,6 +794,9 @@ const Home = () => {
               </View>
             </TouchableOpacity>
         )}
+
+        {/* Modal de beneficios */}
+        {renderBenefitsModal()}
       </View>
   );
 };
@@ -507,7 +808,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 120,
   },
-
   // Header simplificado
   header: {
     flexDirection: 'row',
@@ -541,7 +841,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: -2,
   },
-
   // Hero específico
   heroSection: {
     paddingHorizontal: 20,
@@ -606,7 +905,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     marginTop: 4,
   },
-
   // Beneficios
   benefitsSection: {
     paddingVertical: 20,
@@ -616,7 +914,7 @@ const styles = StyleSheet.create({
     paddingRight: 40,
   },
   benefitCard: {
-    width: 140,
+    width: 160,
     alignItems: 'center',
     padding: 20,
     borderRadius: 16,
@@ -640,8 +938,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 16,
+    marginBottom: 8,
   },
-
+  benefitTapHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  benefitTapText: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginRight: 4,
+  },
   // Productos
   productsSection: {
     paddingHorizontal: 20,
@@ -768,7 +1076,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 16,
   },
-
   // Estados
   loadingState: {
     alignItems: 'center',
@@ -805,7 +1112,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-
   // Testimonios
   testimonialsSection: {
     paddingVertical: 20,
@@ -843,7 +1149,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontStyle: 'italic',
   },
-
   // Redes sociales mejoradas
   socialSection: {
     paddingHorizontal: 20,
@@ -884,7 +1189,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.8)',
     fontSize: 12,
   },
-
   // Títulos
   sectionTitle: {
     fontSize: 24,
@@ -892,7 +1196,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingHorizontal: 20,
   },
-
   // FAB
   cartFab: {
     position: 'absolute',
@@ -924,6 +1227,160 @@ const styles = StyleSheet.create({
     color: COLORS.secondary,
     fontSize: 12,
     fontWeight: 'bold',
+  },
+
+  // ESTILOS DEL MODAL DE BENEFICIOS
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    width: width * 0.95,
+    maxWidth: 420,
+    maxHeight: height * 0.85,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    paddingBottom: 16,
+  },
+  modalHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  modalIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  modalTitleContainer: {
+    flex: 1,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    flex: 1,
+    padding: 20,
+  },
+  modalSection: {
+    marginBottom: 24,
+  },
+  modalSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  modalDescription: {
+    fontSize: 16,
+    lineHeight: 24,
+    textAlign: 'justify',
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  detailBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginTop: 8,
+    marginRight: 12,
+    flexShrink: 0,
+  },
+  detailText: {
+    fontSize: 15,
+    lineHeight: 22,
+    flex: 1,
+  },
+  benefitsGrid: {
+    gap: 12,
+  },
+  benefitItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+  },
+  benefitItemText: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 12,
+    flex: 1,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  tipNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    flexShrink: 0,
+  },
+  tipNumberText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  tipText: {
+    fontSize: 15,
+    lineHeight: 22,
+    flex: 1,
+    marginTop: 2,
+  },
+  modalCTA: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 25,
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  modalCTAText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 8,
   },
 });
 
