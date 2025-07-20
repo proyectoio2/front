@@ -96,6 +96,21 @@ export default function PasswordRecoveryScreen({ navigation }) {
           <Text style={styles.sendButtonText}>Enviar</Text>
         )}
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.backButton,
+          { backgroundColor: isDark ? '#333' : '#f1f3f4' }
+        ]}
+        onPress={() => navigation.navigate('Login')}
+      >
+        <Text style={[
+          styles.backButtonText,
+          { color: isDark ? '#fff' : '#666' }
+        ]}>
+          Volver
+        </Text>
+      </TouchableOpacity>
       <Modal
         animationType="fade"
         transparent
@@ -143,6 +158,17 @@ const styles = StyleSheet.create({
   },
   sendButtonText: {
     color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  backButton: {
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  backButtonText: {
+    fontSize: 16,
     fontWeight: 'bold',
   },
   centeredView: {

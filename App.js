@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -8,6 +8,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { DefaultTheme, DarkTheme } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import NetworkCheck from './components/NetworkCheck';
+import BottomSheetModal from './components/BottomSheetModal';
 import { Ionicons } from '@expo/vector-icons';
 
 import Login from './screens/Login';
@@ -23,7 +24,10 @@ const Stack = createNativeStackNavigator();
 
 function AppContent() {
   const colorScheme = useColorScheme();
-  const { loading, accessToken } = useAuth();
+  const { loading, accessToken, logout } = useAuth();
+  const [menuVisible, setMenuVisible] = useState(false);
+  const navigationRef = useRef(null);
+  
   console.log(accessToken);
   console.log(loading)
   
@@ -38,7 +42,7 @@ function AppContent() {
   
   return (
     <NetworkCheck>
-      <NavigationContainer theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <NavigationContainer ref={navigationRef} theme={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
         <Stack.Navigator
           screenOptions={{
@@ -63,12 +67,12 @@ function AppContent() {
                   title: 'EcoStylo',
                   headerRight: () => (
                     <TouchableOpacity
-                      onPress={() => navigation.navigate('Profile')}
+                      onPress={() => setMenuVisible(true)}
                       style={{ marginRight: 15 }}
                     >
                       <Ionicons 
-                        name="person-circle-outline" 
-                        size={28} 
+                        name="ellipsis-vertical" 
+                        size={24} 
                         color={colorScheme === 'dark' ? '#fff' : '#333'} 
                       />
                     </TouchableOpacity>
@@ -82,6 +86,31 @@ function AppContent() {
             </>
           )}
         </Stack.Navigator>
+        
+        <BottomSheetModal
+          visible={menuVisible}
+          onClose={() => setMenuVisible(false)}
+          title="Opciones"
+          options={[
+            {
+              label: 'Perfil',
+              icon: 'person',
+              onPress: () => {
+                setMenuVisible(false);
+                navigationRef.current?.navigate('Profile');
+              }
+            },
+            {
+              label: 'Cerrar Sesión',
+              icon: 'log-out',
+              destructive: true,
+              onPress: () => {
+                logout();
+              }
+            }
+          ]}
+        />
+        
         <Toast />
       </NavigationContainer>
     </NetworkCheck>
